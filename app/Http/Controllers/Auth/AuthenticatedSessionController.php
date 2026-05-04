@@ -28,7 +28,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        if ($request->user()?->can('screen.dashboard.view')) {
+            return redirect()->intended(route('dashboard', absolute: false));
+        }
+
+        if ($request->user()?->can('screen.profile.edit.view')) {
+            return redirect()->intended(route('profile.edit', absolute: false));
+        }
+
+        return redirect('/');
     }
 
     /**

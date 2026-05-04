@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Manhaj Examination System - Use Case Diagram</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: #fff;
+  color: #000;
+  padding: 20px;
+}
+.page-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+/* The whole diagram is one big SVG — nothing in HTML except the title */
+#diagram { display: block; width: 100%; }
+</style>
+</head>
+<body>
+<div class="page-title">Manhaj Examination System - Use Case Diagram</div>
+
+<svg id="diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 1480"
+     style="font-family:Arial,sans-serif;">
+<defs>
+  <!-- solid arrowhead -->
+  <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+    <path d="M1 2L9 5L1 8" fill="none" stroke="#555" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+  <!-- open triangle arrowhead for "creates/accesses" -->
+  <marker id="aho" viewBox="0 0 10 10" refX="9" refY="5"
+          markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M1 1L9 5L1 9" fill="none" stroke="#555" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round"/>
+  </marker>
+</defs>
+
+<!-- ═══════════════════════════════════════════
+     SYSTEM BOUNDARY BOX
+═══════════════════════════════════════════ -->
+<rect x="200" y="30" width="370" height="1420" rx="0"
+      fill="none" stroke="#000" stroke-width="1.5"/>
+<text x="385" y="22" text-anchor="middle" font-size="11" font-weight="bold">Manhaj Examination System</text>
+
+<!-- ═══════════════════════════════════════════
+     USE CASE PILLS  (cx=385, each pill w≈180 h=28)
+     Pill macro: cx=385, half-w varies
+═══════════════════════════════════════════ -->
+
+<!-- helper: pill = ellipse + text -->
+<!-- Authentication  y=90 -->
+<ellipse cx="385" cy="90"  rx="88" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="94" text-anchor="middle" font-size="11" font-weight="500">Authentication</text>
+
+<!-- include arrow Auth→TakeExam -->
+<line x1="385" y1="106" x2="385" y2="136" stroke="#555" stroke-width="1" marker-end="url(#ah)"/>
+<text x="393" y="126" font-size="9" fill="#333" font-style="italic">include</text>
+
+<!-- Take Exam  y=152 -->
+<ellipse cx="385" cy="152" rx="68" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="156" text-anchor="middle" font-size="11" font-weight="500">Take Exam</text>
+<!-- note -->
+<rect x="465" y="140" width="96" height="30" fill="#FFFDE7" stroke="#bbb" stroke-width="1"/>
+<polygon points="465,140 472,140 465,147" fill="#bbb"/>
+<text x="513" y="152" text-anchor="middle" font-size="8.5">Timed interface with</text>
+<text x="513" y="163" text-anchor="middle" font-size="8.5">auto-submission capability</text>
+<line x1="453" y1="152" x2="465" y2="152" stroke="#bbb" stroke-width="0.8"/>
+
+<!-- Handle Submission Error  y=215 -->
+<ellipse cx="385" cy="215" rx="100" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="219" text-anchor="middle" font-size="11" font-weight="500">Handle Submission Error</text>
+
+<!-- extends arrow SubmitAnswers→HandleSubmissionError -->
+<line x1="385" y1="268" x2="385" y2="231" stroke="#555" stroke-width="1" stroke-dasharray="5 3" marker-end="url(#ah)"/>
+<text x="393" y="254" font-size="9" fill="#333" font-style="italic">extends</text>
+
+<!-- Submit Answers  y=284 -->
+<ellipse cx="385" cy="284" rx="78" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="288" text-anchor="middle" font-size="11" font-weight="500">Submit Answers</text>
+
+<!-- View Scheduled Exams  y=348 -->
+<ellipse cx="385" cy="348" rx="92" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="352" text-anchor="middle" font-size="11" font-weight="500">View Scheduled Exams</text>
+
+<!-- View Results  y=410 -->
+<ellipse cx="385" cy="410" rx="66" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="414" text-anchor="middle" font-size="11" font-weight="500">View Results</text>
+
+<!-- View Profile  y=472 -->
+<ellipse cx="385" cy="472" rx="62" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="476" text-anchor="middle" font-size="11" font-weight="500">View Profile</text>
+
+<!-- Grade Submissions  y=538 -->
+<ellipse cx="385" cy="538" rx="82" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="542" text-anchor="middle" font-size="11" font-weight="500">Grade Submissions</text>
+
+<!-- Login  y=600 -->
+<ellipse cx="385" cy="600" rx="46" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="604" text-anchor="middle" font-size="11" font-weight="500">Login</text>
+
+<!-- Manage Questions  y=662 -->
+<ellipse cx="385" cy="662" rx="82" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="666" text-anchor="middle" font-size="11" font-weight="500">Manage Questions</text>
+
+<!-- Schedule Exam  y=724 -->
+<ellipse cx="385" cy="724" rx="70" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="728" text-anchor="middle" font-size="11" font-weight="500">Schedule Exam</text>
+
+<!-- Create Exam  y=786 -->
+<ellipse cx="385" cy="786" rx="62" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="790" text-anchor="middle" font-size="11" font-weight="500">Create Exam</text>
+
+<!-- Monitor Exam Session  y=848 -->
+<ellipse cx="385" cy="848" rx="88" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="852" text-anchor="middle" font-size="11" font-weight="500">Monitor Exam Session</text>
+<!-- note -->
+<rect x="480" y="836" width="96" height="26" fill="#FFFDE7" stroke="#bbb" stroke-width="1"/>
+<polygon points="480,836 487,836 480,843" fill="#bbb"/>
+<text x="528" y="847" text-anchor="middle" font-size="8">Real-time monitoring of</text>
+<text x="528" y="857" text-anchor="middle" font-size="8">active exam takers</text>
+<line x1="473" y1="848" x2="480" y2="848" stroke="#bbb" stroke-width="0.8"/>
+
+<!-- View Analytics  y=910 -->
+<ellipse cx="385" cy="910" rx="68" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="914" text-anchor="middle" font-size="11" font-weight="500">View Analytics</text>
+<!-- note -->
+<rect x="460" y="893" width="100" height="36" fill="#FFFDE7" stroke="#bbb" stroke-width="1"/>
+<polygon points="460,893 467,893 460,900" fill="#bbb"/>
+<text x="510" y="904" text-anchor="middle" font-size="8">Performance metrics,</text>
+<text x="510" y="914" text-anchor="middle" font-size="8">grade distributions,</text>
+<text x="510" y="924" text-anchor="middle" font-size="8">and question analysis</text>
+<line x1="453" y1="910" x2="460" y2="910" stroke="#bbb" stroke-width="0.8"/>
+
+<!-- Manage Student Grades  y=972 -->
+<ellipse cx="385" cy="972" rx="90" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="976" text-anchor="middle" font-size="11" font-weight="500">Manage Student Grades</text>
+
+<!-- Create/Manage Courses  y=1034 -->
+<ellipse cx="385" cy="1034" rx="90" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1038" text-anchor="middle" font-size="11" font-weight="500">Create/Manage Courses</text>
+
+<!-- System Configuration  y=1098 -->
+<ellipse cx="385" cy="1098" rx="84" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1102" text-anchor="middle" font-size="11" font-weight="500">System Configuration</text>
+
+<!-- Manage User Accounts  y=1160 -->
+<ellipse cx="385" cy="1160" rx="88" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1164" text-anchor="middle" font-size="11" font-weight="500">Manage User Accounts</text>
+
+<!-- View System Reports  y=1222 -->
+<ellipse cx="385" cy="1222" rx="82" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1226" text-anchor="middle" font-size="11" font-weight="500">View System Reports</text>
+
+<!-- Monitor System Activity  y=1284 -->
+<ellipse cx="385" cy="1284" rx="90" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1288" text-anchor="middle" font-size="11" font-weight="500">Monitor System Activity</text>
+
+<!-- Generate Institutional Reports  y=1346 -->
+<ellipse cx="385" cy="1346" rx="106" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1350" text-anchor="middle" font-size="11" font-weight="500">Generate Institutional Reports</text>
+
+<!-- Backup/Restore Data  y=1408 -->
+<ellipse cx="385" cy="1408" rx="80" ry="16" fill="#BDE3F9" stroke="#5BA4CF" stroke-width="1.5"/>
+<text x="385" y="1412" text-anchor="middle" font-size="11" font-weight="500">Backup/Restore Data</text>
+
+
+<!-- ═══════════════════════════════════════════
+     STUDENT  (left side, vertically centred ~y=380)
+═══════════════════════════════════════════ -->
+<g id="student" transform="translate(80,355)">
+  <circle cx="0" cy="0" r="12" fill="none" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="12" x2="0" y2="38" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="20" x2="-16" y2="32" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="20" x2="16" y2="32" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="38" x2="-12" y2="58" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="38" x2="12" y2="58" stroke="#000" stroke-width="1.5"/>
+  <text y="75" text-anchor="middle" font-size="12" font-weight="bold">Student</text>
+</g>
+
+<!-- ═══════════════════════════════════════════
+     INSTRUCTOR  (left side, vertically centred ~y=820)
+═══════════════════════════════════════════ -->
+<g id="instructor" transform="translate(80,795)">
+  <circle cx="0" cy="0" r="12" fill="none" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="12" x2="0" y2="38" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="20" x2="-16" y2="32" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="20" x2="16" y2="32" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="38" x2="-12" y2="58" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="38" x2="12" y2="58" stroke="#000" stroke-width="1.5"/>
+  <text y="75" text-anchor="middle" font-size="12" font-weight="bold">Instructor</text>
+</g>
+
+<!-- ═══════════════════════════════════════════
+     ADMINISTRATOR  (right side, bottom ~y=1280)
+═══════════════════════════════════════════ -->
+<g id="admin" transform="translate(692,1255)">
+  <circle cx="0" cy="0" r="12" fill="none" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="12" x2="0" y2="38" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="20" x2="-16" y2="32" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="20" x2="16" y2="32" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="38" x2="-12" y2="58" stroke="#000" stroke-width="1.5"/>
+  <line x1="0" y1="38" x2="12" y2="58" stroke="#000" stroke-width="1.5"/>
+  <text y="75" text-anchor="middle" font-size="12" font-weight="bold">Administrator</text>
+</g>
+
+
+<!-- ═══════════════════════════════════════════
+     STUDENT CONNECTIONS
+     Student body centre: (80, 355)
+     All curves go from student rightward to pill left edge.
+     Using cubic bezier: M sx sy C cx1 cy1, cx2 cy2, ex ey
+     Control points: first CP pulls right from student,
+     second CP pulls left from pill — creates smooth S-curve.
+═══════════════════════════════════════════ -->
+
+<!-- Student → Authentication (include, dashed) -->
+<path d="M 96 345  C 160 320, 220 90, 297 90"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+<text x="168" y="215" font-size="9" fill="#333" font-style="italic">include</text>
+
+<!-- Student → Take Exam (include, dashed) -->
+<path d="M 96 350  C 155 330, 215 155, 317 152"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+
+<!-- Student → Submit Answers -->
+<path d="M 96 358  C 150 340, 210 285, 307 284"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Student → View Scheduled Exams (accesses) -->
+<path d="M 96 362  C 148 370, 210 350, 293 348"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#aho)"/>
+<text x="148" y="368" font-size="9" fill="#333" font-style="italic">accesses</text>
+
+<!-- Student → View Results (include, dashed) -->
+<path d="M 96 366  C 145 400, 210 412, 319 410"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+<text x="130" y="405" font-size="9" fill="#333" font-style="italic">include</text>
+
+<!-- Student → View Profile -->
+<path d="M 96 370  C 145 430, 210 474, 323 472"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Student → Login (include, dashed) -->
+<path d="M 96 374  C 100 500, 130 590, 339 600"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+<text x="100" y="510" font-size="9" fill="#333" font-style="italic">include</text>
+
+
+<!-- ═══════════════════════════════════════════
+     INSTRUCTOR CONNECTIONS
+     Instructor body centre: (80, 795)
+═══════════════════════════════════════════ -->
+
+<!-- Instructor → Grade Submissions -->
+<path d="M 96 786  C 150 700, 220 548, 303 538"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Instructor → Login (include, dashed) -->
+<path d="M 96 790  C 130 720, 200 615, 339 600"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+<text x="112" y="715" font-size="9" fill="#333" font-style="italic">include</text>
+
+<!-- Instructor → Manage Questions -->
+<path d="M 96 796  C 145 740, 215 668, 303 662"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Instructor → Schedule Exam -->
+<path d="M 96 800  C 145 775, 215 728, 315 724"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Instructor → Create Exam (creates) -->
+<path d="M 96 804  C 145 800, 215 788, 323 786"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#aho)"/>
+<text x="130" y="802" font-size="9" fill="#333" font-style="italic">creates</text>
+
+<!-- Instructor → Monitor Exam Session -->
+<path d="M 96 808  C 145 840, 215 850, 297 848"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Instructor → View Analytics -->
+<path d="M 96 812  C 145 880, 215 912, 317 910"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Instructor → Manage Student Grades -->
+<path d="M 96 816  C 145 930, 215 974, 295 972"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Instructor → Create/Manage Courses -->
+<path d="M 96 820  C 145 990, 215 1036, 295 1034"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+
+<!-- ═══════════════════════════════════════════
+     ADMINISTRATOR CONNECTIONS
+     Admin body centre: (692, 1255)
+     Lines go from admin leftward to pill right edge.
+     Curves sweep left from admin toward each pill.
+═══════════════════════════════════════════ -->
+
+<!-- Admin → System Configuration -->
+<path d="M 680 1246  C 640 1200, 570 1100, 469 1098"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Manage User Accounts (manages, dashed) -->
+<path d="M 680 1250  C 640 1220, 570 1165, 473 1160"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+<text x="612" y="1218" font-size="9" fill="#333" font-style="italic">manages</text>
+
+<!-- Admin → View System Reports -->
+<path d="M 680 1254  C 650 1245, 570 1228, 467 1222"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Monitor System Activity -->
+<path d="M 680 1258  C 655 1275, 570 1292, 475 1284"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Generate Institutional Reports -->
+<path d="M 680 1262  C 655 1310, 570 1352, 491 1346"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Backup/Restore Data -->
+<path d="M 680 1266  C 655 1360, 570 1412, 465 1408"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Login (include, dashed) — long curve up -->
+<path d="M 692 1242  C 710 1000, 720 700, 710 600  C 700 560, 600 600, 431 600"
+      fill="none" stroke="#555" stroke-width="1" stroke-dasharray="5 3"
+      marker-end="url(#ah)"/>
+<text x="704" y="920" font-size="9" fill="#333" font-style="italic">include</text>
+
+<!-- Admin → Monitor Exam Session -->
+<path d="M 692 1238  C 700 1050, 700 900, 690 850  C 680 820, 620 848, 473 848"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → View Analytics -->
+<path d="M 692 1235  C 698 1060, 695 940, 680 910  C 668 890, 600 910, 453 910"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Manage Student Grades -->
+<path d="M 692 1232  C 696 1100, 692 1000, 678 972  C 666 950, 610 972, 475 972"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+<!-- Admin → Create/Manage Courses -->
+<path d="M 692 1229  C 694 1120, 690 1060, 676 1034  C 664 1012, 610 1034, 475 1034"
+      fill="none" stroke="#555" stroke-width="1"
+      marker-end="url(#ah)"/>
+
+</svg>
+</body>
+</html>

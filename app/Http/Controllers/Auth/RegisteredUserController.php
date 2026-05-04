@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Group;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -42,10 +43,24 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $defaultGroup = Group::firstOrCreate(
+            ['slug' => 'member'],
+            ['name' => 'Member']
+        );
+        $user->groups()->syncWithoutDetaching([$defaultGroup->id]);
+
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        if ($user->can('screen.dashboard.view')) {
+            return redirect(route('dashboard', absolute: false));
+        }
+
+        if ($user->can('screen.profile.edit.view')) {
+            return redirect(route('profile.edit', absolute: false));
+        }
+
+        return redirect('/');
     }
 }
