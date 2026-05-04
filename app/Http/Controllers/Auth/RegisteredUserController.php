@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Group;
+use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -47,6 +49,18 @@ class RegisteredUserController extends Controller
             ['slug' => 'member'],
             ['name' => 'Member']
         );
+        $memberRole = Role::firstOrCreate(
+            ['slug' => 'member_role'],
+            ['name' => 'Member Role']
+        );
+        $profilePermission = Permission::firstOrCreate(['name' => 'screen.profile.edit.view']);
+        $updateProfilePermission = Permission::firstOrCreate(['name' => 'db.users.update']);
+
+        $memberRole->permissions()->syncWithoutDetaching([
+            $profilePermission->id,
+            $updateProfilePermission->id,
+        ]);
+        $defaultGroup->roles()->syncWithoutDetaching([$memberRole->id]);
         $user->groups()->syncWithoutDetaching([$defaultGroup->id]);
 
         event(new Registered($user));
