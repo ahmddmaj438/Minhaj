@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TCExamTest extends Model
 {
-    protected $connection = 'tcexam';
-    protected $table = 'tests';
+    protected $table = 'tce_tests';
     protected $primaryKey = 'test_id';
 
     public $timestamps = false;
