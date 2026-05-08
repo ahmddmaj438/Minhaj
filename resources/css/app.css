@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    :root {
+        --brand-navy: #0b1f3a;
+        --brand-navy-soft: #14335f;
+        --brand-orange: #f97316;
+        --brand-orange-soft: #fb923c;
+        --brand-bg: #f8fafc;
+        --brand-card: #ffffff;
+    }
+
+    body {
+        background:
+            radial-gradient(circle at 10% -10%, rgba(249, 115, 22, 0.12), transparent 38%),
+            radial-gradient(circle at 95% 0%, rgba(11, 31, 58, 0.16), transparent 32%),
+            var(--brand-bg);
+        color: #1f2937;
+    }
+}

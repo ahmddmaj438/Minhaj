@@ -1,11 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Create User</h2>
+        <h2 class="font-semibold text-xl text-slate-900 leading-tight">Create User</h2>
     </x-slot>
 
     <div class="py-8">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-sm rounded-lg p-6">
+            <div class="bg-white/95 shadow-sm rounded-xl border border-orange-100 p-6">
                 <form method="POST" action="{{ route('users.store') }}" class="space-y-4">
                     @csrf
                     <div>
@@ -31,4 +31,3 @@
         </div>
     </div>
 </x-app-layout>
-
