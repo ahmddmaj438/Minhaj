@@ -27,6 +27,16 @@
                             {{ __('Users') }}
                         </x-nav-link>
                     @endcan
+                    @can('screen.data.tables.index.view')
+                        <x-nav-link :href="route('data.tables.index')" :active="request()->routeIs('data.*')">
+                            {{ __('Data Management') }}
+                        </x-nav-link>
+                    @endcan
+                    @can('screen.exam.wizard.step1.view')
+                        <x-nav-link :href="route('exam.wizard.step1')" :active="request()->routeIs('exam.wizard.*')">
+                            {{ __('Exam Builder') }}
+                        </x-nav-link>
+                    @endcan
                     @can('grant_super_admin')
                         <x-nav-link :href="route('admin.super-users.index')" :active="request()->routeIs('admin.super-users.*')">
                             {{ __('Super Users') }}
@@ -99,6 +109,16 @@
             @can('screen.users.index.view')
                 <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                     {{ __('Users') }}
+                </x-responsive-nav-link>
+            @endcan
+            @can('screen.data.tables.index.view')
+                <x-responsive-nav-link :href="route('data.tables.index')" :active="request()->routeIs('data.*')">
+                    {{ __('Data Management') }}
+                </x-responsive-nav-link>
+            @endcan
+            @can('screen.exam.wizard.step1.view')
+                <x-responsive-nav-link :href="route('exam.wizard.step1')" :active="request()->routeIs('exam.wizard.*')">
+                    {{ __('Exam Builder') }}
                 </x-responsive-nav-link>
             @endcan
             @can('grant_super_admin')

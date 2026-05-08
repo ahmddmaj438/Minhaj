@@ -184,6 +184,9 @@ class AdminAccessController extends Controller
             'groups.index' => ['create_group', 'edit_group', 'delete_group', 'assign_user_to_group'],
             'admin.access.index' => ['save_screens', 'save_buttons', 'save_db_access', 'save_group_users'],
             'profile.edit' => ['update_profile', 'update_password', 'delete_account'],
+            'data.table.create' => ['create_record'],
+            'data.table.edit' => ['update_record'],
+            'data.table.index' => ['delete_record'],
         ];
 
         $routes = collect(Route::getRoutes());
