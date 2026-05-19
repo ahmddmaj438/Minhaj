@@ -32,7 +32,11 @@
                             {{ __('Data Management') }}
                         </x-nav-link>
                     @endcan
-                    @can('screen.exam.wizard.step1.view')
+                    @can('screen.instructor.exams.create.view')
+                        <x-nav-link :href="route('instructor.exams.create')" :active="request()->routeIs('instructor.exams.*')">
+                            {{ __('Exam Builder') }}
+                        </x-nav-link>
+                    @elsecan('screen.exam.wizard.step1.view')
                         <x-nav-link :href="route('exam.wizard.step1')" :active="request()->routeIs('exam.wizard.*')">
                             {{ __('Exam Builder') }}
                         </x-nav-link>
@@ -116,7 +120,11 @@
                     {{ __('Data Management') }}
                 </x-responsive-nav-link>
             @endcan
-            @can('screen.exam.wizard.step1.view')
+            @can('screen.instructor.exams.create.view')
+                <x-responsive-nav-link :href="route('instructor.exams.create')" :active="request()->routeIs('instructor.exams.*')">
+                    {{ __('Exam Builder') }}
+                </x-responsive-nav-link>
+            @elsecan('screen.exam.wizard.step1.view')
                 <x-responsive-nav-link :href="route('exam.wizard.step1')" :active="request()->routeIs('exam.wizard.*')">
                     {{ __('Exam Builder') }}
                 </x-responsive-nav-link>

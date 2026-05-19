@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Group;
+use App\Models\Course;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
@@ -37,6 +38,19 @@ class DatabaseSeeder extends Seeder
         $adminGroup = Group::firstOrCreate(['slug' => 'admin'], ['name' => 'Admin']);
         $memberGroup = Group::firstOrCreate(['slug' => 'member'], ['name' => 'Member']);
 
+        $courses = [
+            ['code' => 'DBS301', 'name' => 'Database Systems'],
+            ['code' => 'NET302', 'name' => 'Computer Networks'],
+            ['code' => 'WEB303', 'name' => 'Web Application Development'],
+        ];
+
+        foreach ($courses as $course) {
+            Course::firstOrCreate(
+                ['code' => $course['code']],
+                ['name' => $course['name'], 'is_active' => true]
+            );
+        }
+
         $permissionNames = [
             'screen.dashboard.view',
             'screen.profile.edit.view',
@@ -51,6 +65,17 @@ class DatabaseSeeder extends Seeder
             'screen.exam.wizard.step1.view',
             'screen.exam.wizard.step2.view',
             'screen.exam.wizard.step3.view',
+            'screen.instructor.exams.create.view',
+            'screen.instructor.exams.question-types.index.view',
+            'screen.instructor.exams.preview.show.view',
+            'screen.instructor.exams.questions.order.index.view',
+            'screen.instructor.exams.questions.mcq.edit.view',
+            'screen.instructor.exams.questions.true-false.edit.view',
+            'screen.instructor.exams.questions.matching.edit.view',
+            'screen.instructor.exams.questions.fill-blank.edit.view',
+            'screen.instructor.exams.questions.essay.edit.view',
+            'screen.instructor.exams.questions.coding.edit.view',
+            'screen.instructor.exams.questions.packet-tracer.edit.view',
             'button.dashboard.group_management',
             'button.users.create.create_user',
             'button.data.table.create.create_record',
@@ -59,6 +84,17 @@ class DatabaseSeeder extends Seeder
             'button.exam.wizard.step1.next',
             'button.exam.wizard.step2.next',
             'button.exam.wizard.finish.create_exam',
+            'button.instructor.exams.store.save_draft',
+            'button.instructor.exams.questions.select_type',
+            'button.instructor.exams.questions.order.save',
+            'button.instructor.exams.questions.order.delete',
+            'button.instructor.exams.questions.mcq.save',
+            'button.instructor.exams.questions.true_false.save',
+            'button.instructor.exams.questions.matching.save',
+            'button.instructor.exams.questions.fill_blank.save',
+            'button.instructor.exams.questions.essay.save',
+            'button.instructor.exams.questions.coding.save',
+            'button.instructor.exams.questions.packet_tracer.save',
             'button.groups.index.create_group',
             'button.groups.index.edit_group',
             'button.groups.index.delete_group',
@@ -129,6 +165,15 @@ class DatabaseSeeder extends Seeder
             'db.tcexam_result_snapshots.insert',
             'db.tcexam_result_snapshots.update',
             'db.tcexam_result_snapshots.delete',
+            'db.courses.insert',
+            'db.courses.update',
+            'db.courses.delete',
+            'db.instructor_exams.insert',
+            'db.instructor_exams.update',
+            'db.instructor_exams.delete',
+            'db.instructor_exam_questions.insert',
+            'db.instructor_exam_questions.update',
+            'db.instructor_exam_questions.delete',
         ];
 
         $permissionIds = collect($permissionNames)->map(function (string $name) {
