@@ -17,34 +17,48 @@
                             @php
                                 $name = $column['name'];
                                 $isPrimaryCreate = ($mode === 'create' && $primaryKey === $name);
-                                $type = $column['type'];
+                                $input = $column['input'];
                                 $value = old($name, $row?->{$name});
+                                $displayValue = $value;
+                                if ($input === 'datetime-local' && is_string($displayValue)) {
+                                    $displayValue = str_replace(' ', 'T', substr($displayValue, 0, 16));
+                                } elseif ($input === 'date' && is_string($displayValue)) {
+                                    $displayValue = substr($displayValue, 0, 10);
+                                }
+                                $fieldClass = 'block w-full border-slate-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-400';
                             @endphp
                             @if (! $isPrimaryCreate)
-                                <div class="{{ str_contains($type, 'text') ? 'md:col-span-2' : '' }}">
-                                    <label class="block text-sm font-medium text-slate-700 mb-1">{{ $columnLabel($name) }}</label>
+                                <div class="{{ $column['full_width'] ? 'md:col-span-2' : '' }}">
+                                    <label for="{{ $name }}" class="block text-sm font-medium text-slate-700 mb-1">
+                                        {{ $column['label'] }}
+                                        @if ($column['required'])
+                                            <span class="text-orange-600">*</span>
+                                        @endif
+                                    </label>
 
                                     @if (isset($foreignOptions[$name]) && count($foreignOptions[$name]) > 0)
-                                        <select name="{{ $name }}" class="block w-full border-slate-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-400">
-                                            <option value="">Select {{ $columnLabel($name) }}</option>
+                                        <select id="{{ $name }}" name="{{ $name }}" class="{{ $fieldClass }}" @required($column['required'])>
+                                            <option value="">Select {{ $column['label'] }}</option>
                                             @foreach ($foreignOptions[$name] as $opt)
                                                 <option value="{{ $opt['value'] }}" @selected((string) $value === (string) $opt['value'])>{{ $opt['label'] }}</option>
                                             @endforeach
                                         </select>
-                                    @elseif (str_contains($type, 'bool') || str_contains($type, 'tinyint'))
-                                        <label class="inline-flex items-center gap-2 mt-2">
+                                    @elseif ($input === 'checkbox')
+                                        <label for="{{ $name }}" class="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
                                             <input type="hidden" name="{{ $name }}" value="0">
-                                            <input type="checkbox" name="{{ $name }}" value="1" class="rounded border-slate-300 text-orange-500 focus:ring-orange-400" @checked((string)$value === '1')>
-                                            <span class="text-sm text-slate-600">Enabled</span>
+                                            <input id="{{ $name }}" type="checkbox" name="{{ $name }}" value="1" class="rounded border-slate-300 text-orange-500 focus:ring-orange-400" @checked(in_array((string) $value, ['1', 'true', 'on'], true))>
+                                            <span class="text-sm text-slate-700">Yes</span>
                                         </label>
-                                    @elseif (str_contains($type, 'text'))
-                                        <textarea name="{{ $name }}" rows="4" class="block w-full border-slate-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-400">{{ $value }}</textarea>
-                                    @elseif (str_contains($type, 'date') || str_contains($type, 'time'))
-                                        <input type="text" name="{{ $name }}" value="{{ $value }}" class="block w-full border-slate-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-400" placeholder="YYYY-MM-DD HH:MM:SS">
-                                    @elseif (str_contains($type, 'int') || str_contains($type, 'decimal') || str_contains($type, 'numeric') || str_contains($type, 'real') || str_contains($type, 'float'))
-                                        <input type="number" step="any" name="{{ $name }}" value="{{ $value }}" class="block w-full border-slate-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-400">
+                                    @elseif (in_array($input, ['textarea', 'json'], true))
+                                        <textarea id="{{ $name }}" name="{{ $name }}" rows="{{ $column['rows'] }}" class="{{ $fieldClass }} {{ $input === 'json' ? 'font-mono text-sm' : '' }}" placeholder="{{ $column['placeholder'] }}" @required($column['required'])>{{ $value }}</textarea>
+                                    @elseif ($input === 'datetime-local')
+                                        <input id="{{ $name }}" type="datetime-local" name="{{ $name }}" value="{{ $displayValue }}" class="{{ $fieldClass }}" @required($column['required'])>
+                                    @elseif ($input === 'date')
+                                        <input id="{{ $name }}" type="date" name="{{ $name }}" value="{{ $displayValue }}" class="{{ $fieldClass }}" @required($column['required'])>
+                                    @elseif ($input === 'number')
+                                        <input id="{{ $name }}" type="number" step="any" name="{{ $name }}" value="{{ $displayValue }}" class="{{ $fieldClass }}" @required($column['required'])>
                                     @else
-                                        <input type="text" name="{{ $name }}" value="{{ $value }}" class="block w-full border-slate-300 rounded-md shadow-sm focus:border-orange-500 focus:ring-orange-400">
+                                        <input id="{{ $name }}" type="{{ $input }}" name="{{ $name }}" value="{{ $displayValue }}" class="{{ $fieldClass }}" placeholder="{{ $column['placeholder'] }}" @required($column['required'])>
                                     @endif
                                 </div>
                             @endif
@@ -60,4 +74,3 @@
         </div>
     </div>
 </x-app-layout>
-

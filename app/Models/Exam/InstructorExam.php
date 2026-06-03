@@ -3,6 +3,7 @@
 namespace App\Models\Exam;
 
 use App\Models\Course;
+use App\Models\ExamAssignment;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -49,5 +50,10 @@ class InstructorExam extends Model
     public function questions(): HasMany
     {
         return $this->hasMany(InstructorExamQuestion::class)->orderBy('position');
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(ExamAssignment::class);
     }
 }

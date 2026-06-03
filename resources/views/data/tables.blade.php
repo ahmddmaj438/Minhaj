@@ -14,8 +14,7 @@
                     @foreach ($tables as $table)
                         <a href="{{ route('data.table.index', ['table' => $table]) }}"
                            class="rounded-xl border border-orange-100 p-4 hover:bg-orange-50 transition">
-                            <div class="text-sm text-slate-500">{{ $table }}</div>
-                            <div class="text-base font-semibold text-slate-900 mt-1">{{ $displayName($table) }}</div>
+                            <div class="text-base font-semibold text-slate-900">{{ $displayName($table) }}</div>
                         </a>
                     @endforeach
                 </div>
@@ -23,4 +22,3 @@
         </div>
     </div>
 </x-app-layout>
-

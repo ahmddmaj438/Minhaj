@@ -28,6 +28,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if ($request->user()?->isStudent()) {
+            return redirect()->intended(route('student.exams.index', absolute: false));
+        }
+
         if ($request->user()?->can('screen.dashboard.view')) {
             return redirect()->intended(route('dashboard', absolute: false));
         }

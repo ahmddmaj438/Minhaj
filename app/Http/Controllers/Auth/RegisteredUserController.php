@@ -67,6 +67,10 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        if ($user->isStudent()) {
+            return redirect(route('student.exams.index', absolute: false));
+        }
+
         if ($user->can('screen.dashboard.view')) {
             return redirect(route('dashboard', absolute: false));
         }

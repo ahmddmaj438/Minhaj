@@ -39,7 +39,7 @@ class TCExamCrudController extends Controller
     public function create(string $table): View
     {
         $table = $this->guardTable($table);
-        $columns = $this->columnMeta($table);
+        $columns = $this->formFields($table);
         $pk = $this->singlePrimaryKey($table);
         $foreignOptions = $this->foreignOptions($table);
 
@@ -61,7 +61,7 @@ class TCExamCrudController extends Controller
         abort_unless($request->user()?->can('button.data.table.create.create_record'), 403);
         abort_unless($request->user()?->can('db.' . $table . '.insert'), 403);
 
-        $columns = $this->columnMeta($table);
+        $columns = $this->formFields($table);
         $pk = $this->singlePrimaryKey($table);
         $payload = $this->extractPayload($request, $columns, $pk, true);
 
@@ -83,7 +83,7 @@ class TCExamCrudController extends Controller
             'mode' => 'edit',
             'table' => $table,
             'tableLabel' => $this->tableDisplayName($table),
-            'columns' => $this->columnMeta($table),
+            'columns' => $this->formFields($table),
             'columnLabel' => fn (string $c) => $this->columnDisplayName($c),
             'primaryKey' => $pk,
             'foreignOptions' => $this->foreignOptions($table),
@@ -100,7 +100,7 @@ class TCExamCrudController extends Controller
         $pk = $this->singlePrimaryKey($table);
         abort_if(! $pk, 422, 'Update is available only for tables with a single primary key.');
 
-        $payload = $this->extractPayload($request, $this->columnMeta($table), $pk, false);
+        $payload = $this->extractPayload($request, $this->formFields($table), $pk, false);
         DB::table($table)->where($pk, $id)->update($payload);
 
         return redirect()->route('data.table.index', ['table' => $table])->with('status', 'Record updated.');
@@ -148,8 +148,28 @@ class TCExamCrudController extends Controller
                 'type' => strtolower((string) $c->type),
                 'notnull' => (int) $c->notnull === 1,
                 'pk' => (int) $c->pk > 0,
+                'default' => $c->dflt_value,
             ];
         }, $meta);
+    }
+
+    private function formFields(string $table): array
+    {
+        return array_map(function (array $column): array {
+            $name = $column['name'];
+            $type = $column['type'];
+            $input = $this->fieldInput($name, $type);
+
+            return [
+                ...$column,
+                'label' => $this->columnDisplayName($name),
+                'input' => $input,
+                'required' => $column['notnull'] && ! $column['pk'],
+                'full_width' => in_array($input, ['textarea', 'json'], true),
+                'placeholder' => $this->fieldPlaceholder($name, $input),
+                'rows' => $this->fieldRows($name, $input),
+            ];
+        }, $this->columnMeta($table));
     }
 
     private function primaryKeys(string $table): array
@@ -177,12 +197,18 @@ class TCExamCrudController extends Controller
             }
 
             $value = $request->input($name);
+            if (($column['input'] ?? null) === 'datetime-local') {
+                $value = $this->normalizeDateTimeValue($value);
+            }
+
             if ($value === '' && ! $column['notnull']) {
                 $payload[$name] = null;
                 continue;
             }
 
-            if (str_contains($column['type'], 'int')) {
+            if (($column['input'] ?? null) === 'checkbox') {
+                $payload[$name] = in_array((string) $value, ['1', 'true', 'on'], true) ? 1 : 0;
+            } elseif (str_contains($column['type'], 'int')) {
                 $payload[$name] = ($value === '' || $value === null) ? null : (int) $value;
             } elseif (str_contains($column['type'], 'bool') || str_contains($column['type'], 'tinyint')) {
                 $payload[$name] = in_array((string) $value, ['1', 'true', 'on'], true) ? 1 : 0;
@@ -249,6 +275,113 @@ class TCExamCrudController extends Controller
         $name = Str::replaceFirst('tcexam_', '', $table);
         $name = Str::replaceFirst('tce_', '', $name);
         return Str::of($name)->replace('_', ' ')->title()->toString();
+    }
+
+    private function fieldInput(string $name, string $type): string
+    {
+        if ($this->isBooleanField($name, $type)) {
+            return 'checkbox';
+        }
+
+        if (str_contains($type, 'json')) {
+            return 'json';
+        }
+
+        if ($this->isLongTextField($name, $type)) {
+            return 'textarea';
+        }
+
+        if (str_contains($type, 'date') || str_contains($type, 'time') || str_ends_with($name, '_at')) {
+            if (str_contains($type, 'date') && ! str_contains($type, 'time') && ! str_ends_with($name, '_at')) {
+                return 'date';
+            }
+
+            return 'datetime-local';
+        }
+
+        if (str_contains($type, 'int') || str_contains($type, 'decimal') || str_contains($type, 'numeric') || str_contains($type, 'real') || str_contains($type, 'float')) {
+            return 'number';
+        }
+
+        if (str_contains($name, 'email')) {
+            return 'email';
+        }
+
+        if (str_contains($name, 'password')) {
+            return 'password';
+        }
+
+        return 'text';
+    }
+
+    private function isBooleanField(string $name, string $type): bool
+    {
+        return str_contains($type, 'bool')
+            || str_contains($type, 'tinyint')
+            || str_starts_with($name, 'is_')
+            || str_starts_with($name, 'has_')
+            || str_starts_with($name, 'can_')
+            || str_ends_with($name, '_enabled')
+            || str_ends_with($name, '_active')
+            || str_ends_with($name, '_isright')
+            || str_ends_with($name, '_fullscreen')
+            || str_ends_with($name, '_auto_next')
+            || str_ends_with($name, '_inline_answers')
+            || str_ends_with($name, '_to_users')
+            || str_ends_with($name, '_select')
+            || str_ends_with($name, '_radio')
+            || str_ends_with($name, '_partial_score')
+            || str_ends_with($name, '_timeout')
+            || str_ends_with($name, '_repeatable')
+            || str_contains($name, '_random_answers_order')
+            || str_contains($name, '_random_questions_order')
+            || in_array($name, ['passed'], true);
+    }
+
+    private function isLongTextField(string $name, string $type): bool
+    {
+        return str_contains($type, 'text')
+            || str_contains($name, 'description')
+            || str_contains($name, 'explanation')
+            || str_contains($name, 'comment')
+            || str_contains($name, 'payload')
+            || str_contains($name, 'data');
+    }
+
+    private function fieldPlaceholder(string $name, string $input): ?string
+    {
+        return match ($input) {
+            'email' => 'name@example.com',
+            'date' => 'YYYY-MM-DD',
+            'datetime-local' => 'YYYY-MM-DD HH:MM',
+            'json' => '{"key": "value"}',
+            'password' => str_contains($name, 'test') ? 'Optional password' : null,
+            default => null,
+        };
+    }
+
+    private function fieldRows(string $name, string $input): int
+    {
+        if ($input === 'json') {
+            return 8;
+        }
+
+        if (str_contains($name, 'description') || str_contains($name, 'explanation')) {
+            return 5;
+        }
+
+        return $input === 'textarea' ? 4 : 1;
+    }
+
+    private function normalizeDateTimeValue(mixed $value): mixed
+    {
+        if (! is_string($value) || $value === '') {
+            return $value;
+        }
+
+        $value = str_replace('T', ' ', $value);
+
+        return strlen($value) === 16 ? $value . ':00' : $value;
     }
 
     private function columnDisplayName(string $column): string

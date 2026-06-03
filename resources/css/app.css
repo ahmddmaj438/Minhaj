@@ -20,3 +20,82 @@
         color: #1f2937;
     }
 }
+
+@layer components {
+    .dashboard-reveal {
+        opacity: 0;
+        transform: translateY(10px);
+        transition:
+            opacity 420ms ease-out,
+            transform 420ms ease-out,
+            box-shadow 180ms ease,
+            border-color 180ms ease;
+        transition-delay: var(--reveal-delay, 0ms);
+        will-change: opacity, transform;
+    }
+
+    .dashboard-reveal.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .dashboard-card-motion {
+        transition:
+            transform 160ms ease,
+            box-shadow 160ms ease,
+            border-color 160ms ease,
+            background-color 160ms ease;
+    }
+
+    .dashboard-card-motion:hover {
+        transform: translateY(-2px);
+        border-color: rgba(249, 115, 22, 0.24);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .dashboard-bar-fill {
+        transform: scaleY(0.2);
+        transform-origin: bottom;
+        transition: transform 560ms ease-out;
+        transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    .is-visible .dashboard-bar-fill {
+        transform: scaleY(1);
+    }
+
+    .dashboard-progress-fill {
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 520ms ease-out;
+        transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    .is-visible .dashboard-progress-fill {
+        transform: scaleX(1);
+    }
+
+    .dashboard-donut {
+        transform: scale(0.96);
+        transition: transform 520ms ease-out;
+    }
+
+    .is-visible .dashboard-donut {
+        transform: scale(1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .dashboard-reveal,
+        .dashboard-card-motion,
+        .dashboard-bar-fill,
+        .dashboard-progress-fill,
+        .dashboard-donut,
+        .dashboard-float,
+        .dashboard-pulse-dot {
+            animation: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+            transition: none !important;
+        }
+    }
+}

@@ -66,6 +66,7 @@ class DatabaseSeeder extends Seeder
             'screen.exam.wizard.step2.view',
             'screen.exam.wizard.step3.view',
             'screen.instructor.exams.create.view',
+            'screen.instructor.exams.edit.view',
             'screen.instructor.exams.question-types.index.view',
             'screen.instructor.exams.preview.show.view',
             'screen.instructor.exams.questions.order.index.view',
@@ -76,6 +77,8 @@ class DatabaseSeeder extends Seeder
             'screen.instructor.exams.questions.essay.edit.view',
             'screen.instructor.exams.questions.coding.edit.view',
             'screen.instructor.exams.questions.packet-tracer.edit.view',
+            'screen.instructor.grading.index.view',
+            'screen.instructor.grading.sessions.show.view',
             'button.dashboard.group_management',
             'button.users.create.create_user',
             'button.data.table.create.create_record',
@@ -95,6 +98,8 @@ class DatabaseSeeder extends Seeder
             'button.instructor.exams.questions.essay.save',
             'button.instructor.exams.questions.coding.save',
             'button.instructor.exams.questions.packet_tracer.save',
+            'button.instructor.grading.answers.save',
+            'button.instructor.grading.answers.ai_assist',
             'button.groups.index.create_group',
             'button.groups.index.edit_group',
             'button.groups.index.delete_group',
@@ -174,6 +179,8 @@ class DatabaseSeeder extends Seeder
             'db.instructor_exam_questions.insert',
             'db.instructor_exam_questions.update',
             'db.instructor_exam_questions.delete',
+            'db.exam_session_answers.update',
+            'db.exam_sessions.update',
         ];
 
         $permissionIds = collect($permissionNames)->map(function (string $name) {

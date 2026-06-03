@@ -28,6 +28,12 @@
                 </div>
             @endif
 
+            @include('instructor.exams.partials.workspace-nav', [
+                'exam' => $exam,
+                'active' => 'questions',
+                'questionCount' => $questionCount,
+            ])
+
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
                 <div class="space-y-6">
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">

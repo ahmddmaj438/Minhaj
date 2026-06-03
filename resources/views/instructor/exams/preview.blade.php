@@ -11,6 +11,13 @@
 
     <div class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            @include('instructor.exams.partials.workspace-nav', [
+                'exam' => $exam,
+                'active' => 'preview',
+                'questionCount' => $questions->count(),
+                'totalQuestionMarks' => $totalQuestionMarks,
+            ])
+
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
                 <div class="space-y-6">
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">

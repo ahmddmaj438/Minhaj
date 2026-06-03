@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TCExamResultSnapshot extends Model
 {
+    protected $table = 'tcexam_result_snapshots';
+
     protected $fillable = [
         'user_id',
         'tcexam_test_link_id',

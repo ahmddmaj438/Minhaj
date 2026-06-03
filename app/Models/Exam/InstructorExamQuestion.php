@@ -2,8 +2,10 @@
 
 namespace App\Models\Exam;
 
+use App\Models\ExamSessionAnswer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InstructorExamQuestion extends Model
 {
@@ -35,5 +37,10 @@ class InstructorExamQuestion extends Model
     public function exam(): BelongsTo
     {
         return $this->belongsTo(InstructorExam::class, 'instructor_exam_id');
+    }
+
+    public function sessionAnswers(): HasMany
+    {
+        return $this->hasMany(ExamSessionAnswer::class);
     }
 }

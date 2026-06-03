@@ -3,9 +3,9 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-sm font-medium text-orange-600">Instructor workspace</p>
-                <h2 class="text-2xl font-semibold leading-tight text-slate-950">Create Exam</h2>
+                <h2 class="text-2xl font-semibold leading-tight text-slate-950">Exam Builder</h2>
             </div>
-            <div class="text-sm text-slate-500">Phase 1 of 4: Exam settings</div>
+            <div class="text-sm text-slate-500">Create and manage exams</div>
         </div>
     </x-slot>
 
@@ -28,16 +28,70 @@
                 </div>
             @endif
 
+            <section class="mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Created exams</p>
+                        <h3 class="mt-1 text-lg font-semibold text-slate-950">Open an exam workspace</h3>
+                    </div>
+                    <span class="text-sm text-slate-500">{{ $exams->count() }} exams</span>
+                </div>
+
+                @if ($exams->isEmpty())
+                    <div class="mt-5 rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+                        No exams have been created yet.
+                    </div>
+                @else
+                    <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($exams as $exam)
+                            <a href="{{ route('instructor.exams.edit', $exam) }}"
+                                class="flex min-h-44 flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-orange-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                                <div>
+                                    <div class="flex items-start justify-between gap-3">
+                                        <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
+                                            {{ $exam->status }}
+                                        </span>
+                                        <span class="text-xs font-medium text-slate-500">
+                                            {{ $exam->questions_count }} questions
+                                        </span>
+                                    </div>
+
+                                    <h4 class="mt-4 text-base font-semibold text-slate-950">{{ $exam->title }}</h4>
+                                    <p class="mt-2 text-sm text-slate-600">
+                                        {{ $exam->course?->code ?? 'No course' }}
+                                        @if ($exam->course)
+                                            <span class="text-slate-400">/</span>
+                                            {{ $exam->course->name }}
+                                        @endif
+                                    </p>
+                                </div>
+
+                                <dl class="mt-5 grid grid-cols-2 gap-3 text-sm">
+                                    <div class="rounded-md bg-slate-50 p-3">
+                                        <dt class="text-slate-500">Duration</dt>
+                                        <dd class="mt-1 font-semibold text-slate-900">{{ $exam->duration_minutes }} min</dd>
+                                    </div>
+                                    <div class="rounded-md bg-slate-50 p-3">
+                                        <dt class="text-slate-500">Marks</dt>
+                                        <dd class="mt-1 font-semibold text-slate-900">{{ $exam->total_marks }}</dd>
+                                    </div>
+                                </dl>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
                 <form method="POST" action="{{ route('instructor.exams.store') }}" class="space-y-6">
                     @csrf
 
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="border-b border-slate-100 pb-5">
-                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Basic information</p>
-                            <h3 class="mt-1 text-lg font-semibold text-slate-950">Name the exam and connect it to a course</h3>
+                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">New exam</p>
+                            <h3 class="mt-1 text-lg font-semibold text-slate-950">Create an exam shell</h3>
                             <p class="mt-2 text-sm leading-6 text-slate-600">
-                                Keep the title short and use the description for scope, allowed materials, or instructor notes.
+                                After saving, open the exam workspace to add questions, manage ordering, and preview.
                             </p>
                         </div>
 
@@ -79,11 +133,8 @@
 
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="border-b border-slate-100 pb-5">
-                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Exam settings</p>
-                            <h3 class="mt-1 text-lg font-semibold text-slate-950">Set timing and marks</h3>
-                            <p class="mt-2 text-sm leading-6 text-slate-600">
-                                These settings define the exam shell. Questions and correction rules will be handled separately.
-                            </p>
+                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Settings</p>
+                            <h3 class="mt-1 text-lg font-semibold text-slate-950">Timing and marks</h3>
                         </div>
 
                         <div class="mt-6 grid gap-5 md:grid-cols-2">
@@ -123,9 +174,8 @@
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Save mode</p>
-                                <h3 class="mt-1 text-lg font-semibold text-slate-950">Keep the exam editable</h3>
-                                <p class="mt-2 text-sm text-slate-600">Publishing will be available after questions are added and reviewed.</p>
+                                <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Save</p>
+                                <h3 class="mt-1 text-lg font-semibold text-slate-950">Start the exam workflow</h3>
                             </div>
                             <div class="flex flex-col gap-3 sm:flex-row">
                                 <button type="submit" name="intent" value="draft" @disabled($courses->isEmpty())
@@ -134,7 +184,7 @@
                                 </button>
                                 <button type="submit" name="intent" value="publish_later" @disabled($courses->isEmpty())
                                     class="inline-flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">
-                                    Save and continue later
+                                    Save and add questions
                                 </button>
                             </div>
                         </div>
@@ -143,55 +193,30 @@
 
                 <aside class="space-y-6">
                     <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Creation cycle</h3>
+                        <h3 class="text-base font-semibold text-slate-950">Workflow</h3>
                         <div class="mt-5 space-y-4">
                             <div class="flex gap-3">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600 text-sm font-semibold text-white">1</div>
                                 <div>
-                                    <p class="font-medium text-slate-900">Exam settings</p>
+                                    <p class="font-medium text-slate-900">Create shell</p>
                                     <p class="text-sm text-slate-600">Title, course, timing, marks.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-3 opacity-60">
+                            <div class="flex gap-3 opacity-70">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">2</div>
                                 <div>
-                                    <p class="font-medium text-slate-900">Question types</p>
-                                    <p class="text-sm text-slate-600">Objective, text, coding, networking.</p>
+                                    <p class="font-medium text-slate-900">Open workspace</p>
+                                    <p class="text-sm text-slate-600">Edit settings and add questions.</p>
                                 </div>
                             </div>
-                            <div class="flex gap-3 opacity-60">
+                            <div class="flex gap-3 opacity-70">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">3</div>
                                 <div>
-                                    <p class="font-medium text-slate-900">Question builder</p>
-                                    <p class="text-sm text-slate-600">Marks, editing, ordering, bank options.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 opacity-60">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">4</div>
-                                <div>
                                     <p class="font-medium text-slate-900">Preview</p>
-                                    <p class="text-sm text-slate-600">Review before publishing.</p>
+                                    <p class="text-sm text-slate-600">Review the student-facing structure.</p>
                                 </div>
                             </div>
                         </div>
-                    </section>
-
-                    <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Schema proposal</h3>
-                        <dl class="mt-4 space-y-3 text-sm">
-                            <div>
-                                <dt class="font-medium text-slate-900">courses</dt>
-                                <dd class="text-slate-600">Academic course catalog used by exam setup.</dd>
-                            </div>
-                            <div>
-                                <dt class="font-medium text-slate-900">instructor_exams</dt>
-                                <dd class="text-slate-600">Draft/published exam shell owned by an instructor.</dd>
-                            </div>
-                            <div>
-                                <dt class="font-medium text-slate-900">Next phase</dt>
-                                <dd class="text-slate-600">Question definitions, options, code templates, and resources.</dd>
-                            </div>
-                        </dl>
                     </section>
                 </aside>
             </div>

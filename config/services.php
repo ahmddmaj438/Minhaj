@@ -35,4 +35,31 @@ return [
         ],
     ],
 
+    'ai_grading' => [
+        'provider' => env('AI_GRADING_PROVIDER', 'auto'),
+        'google' => [
+            'api_key' => env('GOOGLE_GEMINI_API_KEY'),
+            'model' => env('GOOGLE_GEMINI_MODEL', 'gemini-2.5-flash'),
+            'endpoint' => env('GOOGLE_GEMINI_ENDPOINT', 'https://generativelanguage.googleapis.com'),
+            'timeout' => env('GOOGLE_GEMINI_TIMEOUT', 30),
+        ],
+        'groq' => [
+            'api_key' => env('GROQ_API_KEY'),
+            'model' => env('GROQ_MODEL', 'openai/gpt-oss-20b'),
+            'endpoint' => env('GROQ_ENDPOINT', 'https://api.groq.com/openai/v1/chat/completions'),
+            'timeout' => env('GROQ_TIMEOUT', 30),
+        ],
+        'pollinations' => [
+            'enabled' => env('POLLINATIONS_ENABLED', true),
+            'model' => env('POLLINATIONS_MODEL', 'openai'),
+            'models' => explode(',', env('POLLINATIONS_MODELS', 'openai,mistral')),
+            'endpoint' => env('POLLINATIONS_ENDPOINT', 'https://text.pollinations.ai'),
+            'timeout' => env('POLLINATIONS_TIMEOUT', 18),
+            'max_attempts' => env('POLLINATIONS_MAX_ATTEMPTS', 2),
+            'retry_delay_seconds' => env('POLLINATIONS_RETRY_DELAY_SECONDS', 1),
+            'runtime_budget_seconds' => env('POLLINATIONS_RUNTIME_BUDGET_SECONDS', 26),
+            'ssl_retry_without_verification' => env('POLLINATIONS_SSL_RETRY_WITHOUT_VERIFICATION', true),
+        ],
+    ],
+
 ];
