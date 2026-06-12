@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamActivityLog;
+use App\Models\Exam\InstructorExam;
 use App\Models\ExamAssignment;
 use App\Models\ExamSession;
 use App\Models\StudentProfile;
 use App\Services\ExamSessionManager;
+use App\Services\Exams\ExamActivityLogger;
 use App\Services\Exams\ExamAvailabilityService;
 use App\Services\Exams\ExamFeatureRegistry;
 use App\Services\Exams\ExamTimingService;
@@ -58,12 +61,18 @@ class StudentExamController extends Controller
             ->with('status', 'Exam session started.');
     }
 
-    public function show(Request $request, ExamSession $session, ExamTimingService $timingService): Response|RedirectResponse
+    public function show(
+        Request $request,
+        ExamSession $session,
+        ExamTimingService $timingService,
+        ExamSessionManager $sessionManager
+    ): Response|RedirectResponse
     {
         $student = $this->studentProfile($request);
         $this->authorizeSession($session, $student);
+        $this->authorizePublishedExam($session);
 
-        if ($this->expireIfNeeded($session)) {
+        if ($sessionManager->expireIfNeeded($session)) {
             return $this->noStore(
                 redirect()
                     ->route('student.exams.index')
@@ -110,12 +119,24 @@ class StudentExamController extends Controller
         ]));
     }
 
-    public function save(Request $request, ExamSession $session, QuestionResponseManager $responseManager): RedirectResponse
+    public function save(
+        Request $request,
+        ExamSession $session,
+        QuestionResponseManager $responseManager,
+        ExamSessionManager $sessionManager,
+        ExamActivityLogger $activityLogger
+    ): RedirectResponse
     {
         $student = $this->studentProfile($request);
-        $this->authorizeOpenSession($session, $student);
+        $this->authorizeSession($session, $student);
+        $this->authorizePublishedExam($session);
+        $this->authorizeOpenSession($session, $student, $sessionManager, false);
 
-        $responseManager->saveDrafts($session->load('assignment.exam.questions'), $request->input('answers', []));
+        $answers = $request->input('answers', []);
+        $responseManager->saveDrafts($session->load('assignment.exam.questions'), $answers);
+        $activityLogger->record($session, ExamActivityLog::EVENT_ANSWERS_SAVED, [
+            'answer_count' => count($answers),
+        ]);
 
         return back()->with('status', 'Answers saved.');
     }
@@ -127,10 +148,18 @@ class StudentExamController extends Controller
         ExamSessionManager $sessionManager
     ): RedirectResponse {
         $student = $this->studentProfile($request);
-        $this->authorizeOpenSession($session, $student);
+        $this->authorizeSession($session, $student);
+        $this->authorizePublishedExam($session);
+
+        if ($session->status !== ExamSession::STATUS_IN_PROGRESS) {
+            throw ValidationException::withMessages([
+                'exam' => 'Only an in-progress exam session can be submitted.',
+            ]);
+        }
 
         $responseManager->saveDrafts($session->load('assignment.exam.questions'), $request->input('answers', []));
-        $sessionManager->submit($session);
+        $timedOut = $session->expires_at && now()->gt($session->expires_at);
+        $sessionManager->submit($session, timedOut: $timedOut);
 
         return $this->noStore(
             redirect()
@@ -153,11 +182,28 @@ class StudentExamController extends Controller
         abort_unless((int) $session->student_profile_id === (int) $student->id, 403);
     }
 
-    private function authorizeOpenSession(ExamSession $session, StudentProfile $student): void
+    private function authorizePublishedExam(ExamSession $session): void
     {
-        $this->authorizeSession($session, $student);
+        $session->loadMissing('assignment.exam');
 
-        if ($this->expireIfNeeded($session)) {
+        abort_unless(
+            $session->assignment?->exam?->status === InstructorExam::STATUS_PUBLISHED,
+            404
+        );
+    }
+
+    private function authorizeOpenSession(
+        ExamSession $session,
+        StudentProfile $student,
+        ExamSessionManager $sessionManager,
+        bool $authorizeOwner = true
+    ): void
+    {
+        if ($authorizeOwner) {
+            $this->authorizeSession($session, $student);
+        }
+
+        if ($sessionManager->expireIfNeeded($session)) {
             throw ValidationException::withMessages([
                 'exam' => 'This exam session has expired.',
             ]);
@@ -168,21 +214,6 @@ class StudentExamController extends Controller
                 'exam' => 'Only an in-progress exam session can be changed.',
             ]);
         }
-    }
-
-    private function expireIfNeeded(ExamSession $session): bool
-    {
-        if ($session->status !== ExamSession::STATUS_IN_PROGRESS) {
-            return false;
-        }
-
-        if (! $session->expires_at || now()->lte($session->expires_at)) {
-            return false;
-        }
-
-        $session->update(['status' => ExamSession::STATUS_EXPIRED]);
-
-        return true;
     }
 
     private function noStore(Response|RedirectResponse $response): Response|RedirectResponse

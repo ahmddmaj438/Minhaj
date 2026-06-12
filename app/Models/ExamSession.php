@@ -58,4 +58,9 @@ class ExamSession extends Model
     {
         return $this->hasMany(ExamSessionAnswer::class);
     }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ExamActivityLog::class);
+    }
 }

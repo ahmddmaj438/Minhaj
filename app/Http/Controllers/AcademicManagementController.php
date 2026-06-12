@@ -27,7 +27,10 @@ class AcademicManagementController extends Controller
             'students' => StudentProfile::with(['user', 'major', 'courses'])->latest()->get(),
             'studentUsers' => User::whereDoesntHave('studentProfile')->orderBy('name')->get(),
             'courses' => Course::with(['majors', 'students.user'])->orderBy('code')->orderBy('name')->get(),
-            'exams' => InstructorExam::with('course')->latest()->get(),
+            'exams' => InstructorExam::with('course')
+                ->where('status', InstructorExam::STATUS_PUBLISHED)
+                ->latest()
+                ->get(),
             'assignments' => ExamAssignment::with(['exam', 'course', 'student.user', 'assignedBy'])
                 ->latest()
                 ->limit(50)
@@ -164,6 +167,12 @@ class AcademicManagementController extends Controller
         unset($data['show_score_to_student'], $data['show_feedback_to_student']);
 
         $exam = InstructorExam::findOrFail($data['instructor_exam_id']);
+        if ($exam->status !== InstructorExam::STATUS_PUBLISHED) {
+            throw ValidationException::withMessages([
+                'instructor_exam_id' => 'Only published exams can be assigned to students.',
+            ]);
+        }
+
         if ((int) $exam->course_id !== (int) $data['course_id']) {
             throw ValidationException::withMessages([
                 'course_id' => 'The selected exam belongs to another course.',

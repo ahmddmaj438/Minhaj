@@ -45,6 +45,7 @@ class PacketTracerQuestionController extends Controller
             'marks' => $validated['marks'],
             'difficulty' => $validated['difficulty'] ?? null,
             'topic' => $validated['topic'] ?? null,
+            'display_override' => $validated['display_override'],
             'save_to_bank' => $request->boolean('save_to_bank'),
             'prompt' => [
                 'status' => 'configured',

@@ -1,10 +1,12 @@
 <?php
 
 use App\Http\Controllers\AdminAccessController;
+use App\Http\Controllers\Admin\AiConfigurationController;
 use App\Http\Controllers\AcademicManagementController;
 use App\Http\Controllers\ExamWizardController;
 use App\Http\Controllers\Instructor\CodingQuestionController;
 use App\Http\Controllers\Instructor\ExamPreviewController;
+use App\Http\Controllers\Instructor\ExamPublishingController;
 use App\Http\Controllers\Instructor\ExamSetupController;
 use App\Http\Controllers\Instructor\EssayQuestionController;
 use App\Http\Controllers\Instructor\FillBlankQuestionController;
@@ -178,6 +180,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'screen'])->group(fu
     Route::get('/super-users', [SuperUserController::class, 'index'])->name('super-users.index');
     Route::post('/super-users/grant', [SuperUserController::class, 'grant'])->name('super-users.grant');
     Route::delete('/super-users/{user}', [SuperUserController::class, 'revoke'])->name('super-users.revoke');
+    Route::get('/settings/ai-configuration', [AiConfigurationController::class, 'edit'])->name('settings.ai-configuration.edit');
+    Route::post('/settings/ai-configuration', [AiConfigurationController::class, 'update'])->name('settings.ai-configuration.update');
+    Route::post('/settings/ai-configuration/test', [AiConfigurationController::class, 'test'])->name('settings.ai-configuration.test');
 });
 
 Route::prefix('admin/data')->middleware(['auth', 'screen'])->group(function () {
@@ -208,6 +213,9 @@ Route::prefix('instructor/exams')->name('instructor.exams.')->middleware(['auth'
     Route::get('/{exam}/question-types', [QuestionTypeController::class, 'index'])->name('question-types.index');
     Route::post('/{exam}/question-types', [QuestionTypeController::class, 'store'])->name('question-types.store');
     Route::get('/{exam}/preview', [ExamPreviewController::class, 'show'])->name('preview.show');
+    Route::get('/{exam}/publish', [ExamPublishingController::class, 'show'])->name('publish.show');
+    Route::post('/{exam}/publish', [ExamPublishingController::class, 'publish'])->name('publish.store');
+    Route::patch('/{exam}/publish/draft', [ExamPublishingController::class, 'returnToDraft'])->name('publish.draft');
     Route::get('/{exam}/questions/order', [QuestionOrderingController::class, 'index'])->name('questions.order.index');
     Route::patch('/{exam}/questions/order', [QuestionOrderingController::class, 'update'])->name('questions.order.update');
     Route::get('/{exam}/questions/{question}/mcq', [McqQuestionController::class, 'edit'])->name('questions.mcq.edit');

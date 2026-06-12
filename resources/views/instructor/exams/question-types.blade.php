@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Choose Question Type</h2>
             </div>
-            <div class="text-sm text-slate-500">Phase 2 of 4: Question types</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
         </div>
     </x-slot>
 
@@ -131,36 +131,20 @@
 
                 <aside class="space-y-6">
                     <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Creation cycle</h3>
-                        <div class="mt-5 space-y-4">
-                            <div class="flex gap-3 opacity-70">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700">1</div>
-                                <div>
-                                    <p class="font-medium text-slate-900">Exam settings</p>
-                                    <p class="text-sm text-slate-600">Saved as draft.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-orange-600 text-sm font-semibold text-white">2</div>
-                                <div>
-                                    <p class="font-medium text-slate-900">Question types</p>
-                                    <p class="text-sm text-slate-600">Choose the structure before editing details.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 opacity-60">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">3</div>
-                                <div>
-                                    <p class="font-medium text-slate-900">Dedicated builders</p>
-                                    <p class="text-sm text-slate-600">MCQ, coding, networking, and more.</p>
-                                </div>
-                            </div>
-                            <div class="flex gap-3 opacity-60">
-                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">4</div>
-                                <div>
-                                    <p class="font-medium text-slate-900">Preview</p>
-                                    <p class="text-sm text-slate-600">Review the student-facing structure.</p>
-                                </div>
-                            </div>
+                        <h3 class="text-base font-semibold text-slate-950">Recommended next steps</h3>
+                        <div class="mt-4 grid gap-3">
+                            <a href="{{ route('instructor.exams.questions.order.index', $exam) }}"
+                                class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 hover:border-orange-300">
+                                1. Review order and marks
+                            </a>
+                            <a href="{{ route('instructor.exams.preview.show', $exam) }}"
+                                class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 hover:border-orange-300">
+                                2. Preview the student view
+                            </a>
+                            <a href="{{ route('instructor.exams.publish.show', $exam) }}"
+                                class="rounded-md bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-orange-600">
+                                3. Check readiness and publish
+                            </a>
                         </div>
                     </section>
 

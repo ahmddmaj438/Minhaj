@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Instructor;
 
+use App\Support\Exams\QuestionDisplayOverrideCatalog;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateMatchingQuestionRequest extends FormRequest
@@ -20,6 +22,7 @@ class UpdateMatchingQuestionRequest extends FormRequest
             'marks' => ['required', 'numeric', 'min:0.25', 'max:9999.99'],
             'difficulty' => ['nullable', 'string', 'in:easy,medium,hard,advanced'],
             'topic' => ['nullable', 'string', 'max:255'],
+            'display_override' => ['required', Rule::in(QuestionDisplayOverrideCatalog::keys())],
             'shuffle_left_items' => ['nullable', 'boolean'],
             'shuffle_right_items' => ['nullable', 'boolean'],
             'save_to_bank' => ['nullable', 'boolean'],

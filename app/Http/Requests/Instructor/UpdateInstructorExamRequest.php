@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Instructor;
 
+use App\Support\Exams\ExamDisplayFormatCatalog;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -22,6 +23,7 @@ class UpdateInstructorExamRequest extends FormRequest
             'starts_at' => ['nullable', 'required_with:ends_at', 'date'],
             'ends_at' => ['nullable', 'date', 'after:starts_at'],
             'total_marks' => ['required', 'numeric', 'min:1', 'max:9999.99'],
+            'display_format' => ['required', Rule::in(ExamDisplayFormatCatalog::keys())],
         ];
     }
 
@@ -33,6 +35,7 @@ class UpdateInstructorExamRequest extends FormRequest
             'starts_at' => 'start date and time',
             'ends_at' => 'end date and time',
             'total_marks' => 'total marks',
+            'display_format' => 'exam format',
         ];
     }
 }

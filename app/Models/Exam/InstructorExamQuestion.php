@@ -19,7 +19,10 @@ class InstructorExamQuestion extends Model
         'difficulty',
         'topic',
         'programming_language',
+        'display_override',
         'save_to_bank',
+        'tcexam_question_id',
+        'tcexam_subject_id',
         'prompt',
         'settings',
     ];

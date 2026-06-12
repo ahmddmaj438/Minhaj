@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Preview Exam</h2>
             </div>
-            <div class="text-sm text-slate-500">Phase 11: Structure preview</div>
+            <div class="text-sm text-slate-500">Step 4 of 5: Preview</div>
         </div>
     </x-slot>
 
@@ -44,6 +44,12 @@
                                     <dt class="text-slate-500">Ends</dt>
                                     <dd class="mt-1 font-semibold text-slate-900">{{ $exam->ends_at?->format('Y-m-d H:i') ?? 'Not set' }}</dd>
                                 </div>
+                                <div class="col-span-2 rounded-md bg-orange-50 p-3">
+                                    <dt class="text-orange-700">Student display format</dt>
+                                    <dd class="mt-1 font-semibold text-orange-950">
+                                        {{ \App\Support\Exams\ExamDisplayFormatCatalog::formats()[$exam->display_format]['title'] ?? 'One Question at a Time' }}
+                                    </dd>
+                                </div>
                             </dl>
                         </div>
                     </section>
@@ -62,6 +68,11 @@
                                     <div class="flex flex-wrap items-center gap-2">
                                         <span class="rounded-full bg-slate-950 px-2.5 py-1 text-xs font-semibold text-white">Question {{ $question->position }}</span>
                                         <span class="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">{{ $typeLabel }}</span>
+                                        @if (($question->display_override ?? 'standard') !== 'standard')
+                                            <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                                                {{ \App\Support\Exams\QuestionDisplayOverrideCatalog::all()[$question->display_override]['label'] ?? 'Custom layout' }}
+                                            </span>
+                                        @endif
                                     </div>
                                     <h4 class="mt-3 text-lg font-semibold text-slate-950">{{ $questionText }}</h4>
                                     @if (! empty($prompt['instructions']))
@@ -189,13 +200,17 @@
                                 class="inline-flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700">
                                 Add questions
                             </a>
+                            <a href="{{ route('instructor.exams.publish.show', $exam) }}"
+                                class="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700">
+                                Continue to publish
+                            </a>
                         </div>
                     </section>
 
                     <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Preview only</h3>
+                        <h3 class="text-base font-semibold text-slate-950">Before publishing</h3>
                         <p class="mt-3 text-sm leading-6 text-slate-600">
-                            This page reviews structure only. It does not publish, accept submissions, grade answers, run code, or evaluate Packet Tracer files.
+                            Confirm the wording, ordering, marks, display format, coding blocks, and attached resources. Publishing is handled in the final step.
                         </p>
                     </section>
                 </aside>

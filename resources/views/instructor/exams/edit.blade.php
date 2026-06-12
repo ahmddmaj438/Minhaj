@@ -30,7 +30,7 @@
 
             @include('instructor.exams.partials.workspace-nav', [
                 'exam' => $exam,
-                'active' => 'settings',
+                'active' => 'information',
                 'questionCount' => $questions->count(),
                 'totalQuestionMarks' => $totalQuestionMarks,
             ])
@@ -67,7 +67,7 @@
                         @csrf
                         @method('PUT')
 
-                        <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                        <section id="exam-information" class="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                             <div class="border-b border-slate-100 pb-5">
                                 <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Exam settings</p>
                                 <h3 class="mt-1 text-lg font-semibold text-slate-950">Edit the exam shell</h3>
@@ -141,8 +141,28 @@
                                     <x-input-error :messages="$errors->get('ends_at')" class="mt-2" />
                                 </div>
                             </div>
+                        </section>
 
-                            <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <section id="exam-format" class="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                            <div class="border-b border-slate-100 pb-5">
+                                <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Exam Format</p>
+                                <h3 class="mt-1 text-lg font-semibold text-slate-950">How students will move through the exam</h3>
+                                <p class="mt-2 text-sm leading-6 text-slate-600">
+                                    Pick the layout that best fits this exam. The preview and student exam page will use this choice.
+                                </p>
+                            </div>
+
+                            <div class="mt-6">
+                                @include('instructor.exams.partials.format-selector', [
+                                    'formats' => $displayFormats,
+                                    'selected' => $exam->display_format ?? \App\Models\Exam\InstructorExam::FORMAT_ONE_QUESTION_AT_TIME,
+                                ])
+                                <x-input-error :messages="$errors->get('display_format')" class="mt-3" />
+                            </div>
+                        </section>
+
+                        <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                 <a href="{{ route('instructor.exams.create') }}"
                                     class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
                                     Back to exams

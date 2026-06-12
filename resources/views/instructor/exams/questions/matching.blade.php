@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Matching Question</h2>
             </div>
-            <div class="text-sm text-slate-500">Phase 5: Matching builder</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
         </div>
     </x-slot>
 
@@ -40,6 +40,11 @@
                     </ul>
                 </div>
             @endif
+
+            @include('instructor.exams.partials.workspace-nav', [
+                'exam' => $exam,
+                'active' => 'questions',
+            ])
 
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
                 <form method="POST" action="{{ route('instructor.exams.questions.matching.update', [$exam, $question]) }}" class="space-y-6"
@@ -182,6 +187,8 @@
                                 </select>
                                 <x-input-error :messages="$errors->get('difficulty')" class="mt-2" />
                             </div>
+
+                            @include('instructor.exams.questions.partials.display-override-selector', ['question' => $question])
 
                             <div class="md:col-span-2">
                                 <label for="topic" class="block text-sm font-medium text-slate-800">Topic</label>

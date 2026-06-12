@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\ExamAssignment;
+use App\Models\ExamActivityLog;
+use App\Models\Exam\InstructorExam;
 use App\Models\ExamSession;
 use App\Models\StudentProfile;
+use App\Services\Exams\ExamActivityLogger;
 use App\Services\Exams\ExamScoringManager;
 use App\Services\Exams\Grading\SessionGradeCalculator;
 use App\Services\Exams\ExamTimingService;
@@ -19,6 +22,7 @@ class ExamSessionManager
         private readonly QuestionResponseManager $responseManager,
         private readonly ExamScoringManager $scoringManager,
         private readonly SessionGradeCalculator $gradeCalculator,
+        private readonly ExamActivityLogger $activityLogger,
     ) {}
 
     public function start(ExamAssignment $assignment, StudentProfile $student): ExamSession
@@ -35,6 +39,7 @@ class ExamSessionManager
             if ($activeSession && (! $activeSession->expires_at || now()->lte($activeSession->expires_at))) {
                 $activeSession->loadMissing('assignment.exam.questions');
                 $this->responseManager->createDraftAnswers($activeSession);
+                $this->activityLogger->record($activeSession, ExamActivityLog::EVENT_RESUMED);
 
                 return $activeSession;
             }
@@ -83,12 +88,13 @@ class ExamSessionManager
 
             $session->setRelation('assignment', $assignment);
             $this->responseManager->createDraftAnswers($session);
+            $this->activityLogger->record($session, ExamActivityLog::EVENT_STARTED);
 
             return $session;
         });
     }
 
-    public function submit(ExamSession $session, ?float $score = null): ExamSession
+    public function submit(ExamSession $session, ?float $score = null, bool $timedOut = false): ExamSession
     {
         if ($session->status !== ExamSession::STATUS_IN_PROGRESS) {
             throw ValidationException::withMessages([
@@ -96,9 +102,20 @@ class ExamSessionManager
             ]);
         }
 
+        $metadata = $session->metadata ?? [];
+        if ($timedOut) {
+            $metadata['timed_out'] = true;
+            $metadata['timed_out_at'] = now()->toISOString();
+        }
+
         $session->update([
             'submitted_at' => now(),
             'status' => ExamSession::STATUS_SUBMITTED,
+            'metadata' => $metadata,
+        ]);
+
+        $this->activityLogger->record($session, ExamActivityLog::EVENT_SUBMITTED, [
+            'timed_out' => $timedOut,
         ]);
 
         if ($score !== null) {
@@ -128,8 +145,24 @@ class ExamSessionManager
         $session->update([
             'status' => ExamSession::STATUS_EXPIRED,
         ]);
+        $this->activityLogger->record($session, ExamActivityLog::EVENT_EXPIRED);
 
         return $session->refresh();
+    }
+
+    public function expireIfNeeded(ExamSession $session): bool
+    {
+        if ($session->status !== ExamSession::STATUS_IN_PROGRESS) {
+            return false;
+        }
+
+        if (! $session->expires_at || now()->lte($session->expires_at)) {
+            return false;
+        }
+
+        $this->expire($session);
+
+        return true;
     }
 
     public function cancel(ExamSession $session): ExamSession
@@ -149,6 +182,16 @@ class ExamSessionManager
 
     private function ensureStudentCanUseAssignment(ExamAssignment $assignment, StudentProfile $student): void
     {
+        $exam = $assignment->relationLoaded('exam')
+            ? $assignment->exam
+            : $assignment->exam()->first();
+
+        if (! $exam || $exam->status !== InstructorExam::STATUS_PUBLISHED) {
+            throw ValidationException::withMessages([
+                'exam' => 'This exam has not been published.',
+            ]);
+        }
+
         if (! in_array($assignment->status, [ExamAssignment::STATUS_ASSIGNED, ExamAssignment::STATUS_OPEN], true)) {
             throw ValidationException::withMessages([
                 'exam' => 'This exam assignment is not open.',

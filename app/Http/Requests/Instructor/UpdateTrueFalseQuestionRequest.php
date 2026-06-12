@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Instructor;
 
+use App\Support\Exams\QuestionDisplayOverrideCatalog;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdateTrueFalseQuestionRequest extends FormRequest
@@ -26,6 +28,7 @@ class UpdateTrueFalseQuestionRequest extends FormRequest
             'marks' => ['required', 'numeric', 'min:0.25', 'max:9999.99'],
             'difficulty' => ['nullable', 'string', 'in:easy,medium,hard,advanced'],
             'topic' => ['nullable', 'string', 'max:255'],
+            'display_override' => ['required', Rule::in(QuestionDisplayOverrideCatalog::keys())],
             'save_to_bank' => ['nullable', 'boolean'],
             'intent' => ['required', 'string', 'in:save,save_add_another'],
         ];

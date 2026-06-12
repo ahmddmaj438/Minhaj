@@ -66,6 +66,11 @@
                             {{ __('Super Users') }}
                         </x-nav-link>
                     @endcan
+                    @can('screen.admin.settings.ai-configuration.edit.view')
+                        <x-nav-link :href="route('admin.settings.ai-configuration.edit')" :active="request()->routeIs('admin.settings.ai-configuration.*')">
+                            {{ __('AI Configuration') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -167,6 +172,11 @@
             @can('grant_super_admin')
                 <x-responsive-nav-link :href="route('admin.super-users.index')" :active="request()->routeIs('admin.super-users.*')">
                     {{ __('Super Users') }}
+                </x-responsive-nav-link>
+            @endcan
+            @can('screen.admin.settings.ai-configuration.edit.view')
+                <x-responsive-nav-link :href="route('admin.settings.ai-configuration.edit')" :active="request()->routeIs('admin.settings.ai-configuration.*')">
+                    {{ __('AI Configuration') }}
                 </x-responsive-nav-link>
             @endcan
         </div>

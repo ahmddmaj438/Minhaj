@@ -122,6 +122,121 @@ class StudentExamPortalTest extends TestCase
         ]);
     }
 
+    public function test_student_exam_session_renders_selected_display_format(): void
+    {
+        $this->travelTo('2026-06-02 10:00:00');
+
+        [$studentUser, $student, $course, $instructor] = $this->studentCourseContext();
+
+        $cases = [
+            InstructorExam::FORMAT_ONE_QUESTION_AT_TIME => ['One Question at a Time', 'Flag question', 'Next'],
+            InstructorExam::FORMAT_ALL_QUESTIONS => ['All Questions on One Page', 'Quick navigation', 'All questions are on this page'],
+            InstructorExam::FORMAT_GOOGLE_FORMS => ['Google Forms Style', 'Sections', 'Work through each group'],
+        ];
+
+        foreach ($cases as $format => $expectedText) {
+            $exam = InstructorExam::create([
+                'course_id' => $course->id,
+                'instructor_id' => $instructor->id,
+                'title' => 'Format Exam '.$format,
+                'duration_minutes' => 60,
+                'total_marks' => 100,
+                'display_format' => $format,
+                'status' => InstructorExam::STATUS_PUBLISHED,
+            ]);
+
+            InstructorExamQuestion::create([
+                'instructor_exam_id' => $exam->id,
+                'type' => 'essay',
+                'category' => 'text',
+                'title' => 'Explain normalization',
+                'position' => 1,
+                'marks' => 10,
+                'topic' => 'Database Design',
+                'prompt' => ['question_text' => 'Explain normalization in relational databases.'],
+                'settings' => ['rubric' => 'Clarity and accuracy.'],
+            ]);
+
+            $assignment = ExamAssignment::create([
+                'instructor_exam_id' => $exam->id,
+                'course_id' => $course->id,
+                'student_profile_id' => $student->id,
+                'assigned_by' => $instructor->id,
+                'available_at' => '2026-06-02 09:00:00',
+                'due_at' => '2026-06-02 12:00:00',
+                'max_attempts' => 1,
+                'status' => ExamAssignment::STATUS_ASSIGNED,
+            ]);
+
+            $this->actingAs($studentUser)->post(route('student.exams.start', $assignment));
+            $session = ExamSession::latest('id')->first();
+
+            $response = $this
+                ->actingAs($studentUser)
+                ->get(route('student.exams.sessions.show', $session));
+
+            $response->assertOk();
+            foreach ($expectedText as $text) {
+                $response->assertSee($text);
+            }
+        }
+    }
+
+    public function test_question_level_display_overrides_render_in_student_exam(): void
+    {
+        $this->travelTo('2026-06-02 10:00:00');
+
+        [$studentUser, $student, $course, $instructor] = $this->studentCourseContext();
+        $exam = $this->examForCourse($course, $instructor, 'Override Layout Exam');
+
+        $questions = [
+            ['type' => 'essay', 'category' => 'text', 'title' => 'Large response', 'override' => 'large_text_area'],
+            ['type' => 'essay', 'category' => 'text', 'title' => 'Long essay', 'override' => 'expanded_essay'],
+            ['type' => 'matching', 'category' => 'objective', 'title' => 'Match terms', 'override' => 'matching_focused'],
+            ['type' => 'packet_tracer', 'category' => 'networking', 'title' => 'Network task', 'override' => 'attachment_focused'],
+        ];
+
+        foreach ($questions as $index => $data) {
+            InstructorExamQuestion::create([
+                'instructor_exam_id' => $exam->id,
+                'type' => $data['type'],
+                'category' => $data['category'],
+                'title' => $data['title'],
+                'position' => $index + 1,
+                'marks' => 10,
+                'display_override' => $data['override'],
+                'prompt' => ['question_text' => $data['title']],
+                'settings' => $data['type'] === 'matching'
+                    ? ['pairs' => [['left' => 'Term', 'right' => 'Definition']]]
+                    : ['expected_tasks' => 'Complete the configured task.'],
+            ]);
+        }
+
+        $assignment = ExamAssignment::create([
+            'instructor_exam_id' => $exam->id,
+            'course_id' => $course->id,
+            'student_profile_id' => $student->id,
+            'assigned_by' => $instructor->id,
+            'available_at' => '2026-06-02 09:00:00',
+            'due_at' => '2026-06-02 12:00:00',
+            'max_attempts' => 1,
+            'status' => ExamAssignment::STATUS_ASSIGNED,
+        ]);
+
+        $this->actingAs($studentUser)->post(route('student.exams.start', $assignment));
+        $session = ExamSession::first();
+
+        $this
+            ->actingAs($studentUser)
+            ->get(route('student.exams.sessions.show', $session))
+            ->assertOk()
+            ->assertSee('Large answer area')
+            ->assertSee('Expanded essay layout')
+            ->assertSee('Matching-focused layout')
+            ->assertSee('Attachment-focused layout')
+            ->assertSee('rows="18"', false);
+    }
+
     public function test_objective_answers_are_scored_on_submit(): void
     {
         $this->travelTo('2026-06-02 10:00:00');
@@ -133,6 +248,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Objective Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $question = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -265,6 +381,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Essay Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $question = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -333,6 +450,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Mixed Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $mcq = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -415,6 +533,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Written Assist Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $essay = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -587,6 +706,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Gemini Coding Assist Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $coding = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -718,6 +838,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Groq Assist Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $coding = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -827,6 +948,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Pollinations Assist Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $essay = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -928,6 +1050,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Pollinations Retry Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $essay = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -990,6 +1113,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Browser Assist Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $essay = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -1079,6 +1203,7 @@ class StudentExamPortalTest extends TestCase
             'title' => 'Fallback Assist Exam',
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
         $essay = InstructorExamQuestion::create([
             'instructor_exam_id' => $exam->id,
@@ -1162,6 +1287,7 @@ class StudentExamPortalTest extends TestCase
             'title' => $title,
             'duration_minutes' => 60,
             'total_marks' => 100,
+            'status' => InstructorExam::STATUS_PUBLISHED,
         ]);
     }
 }

@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Question Ordering</h2>
             </div>
-            <div class="text-sm text-slate-500">Phase 10: Ordering system</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
         </div>
     </x-slot>
 
@@ -30,7 +30,7 @@
 
             @include('instructor.exams.partials.workspace-nav', [
                 'exam' => $exam,
-                'active' => 'order',
+                'active' => 'questions',
                 'questionCount' => $questions->count(),
                 'totalQuestionMarks' => $totalQuestionMarks,
             ])

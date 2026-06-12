@@ -2,6 +2,7 @@
 
 namespace App\Services\Exams;
 
+use App\Models\Exam\InstructorExam;
 use App\Models\ExamAssignment;
 use App\Models\ExamSession;
 use App\Models\StudentProfile;
@@ -29,6 +30,7 @@ class ExamAvailabilityService
                     ->latest(),
             ])
             ->whereIn('course_id', $courseIds)
+            ->whereHas('exam', fn ($query) => $query->where('status', InstructorExam::STATUS_PUBLISHED))
             ->whereIn('status', [ExamAssignment::STATUS_ASSIGNED, ExamAssignment::STATUS_OPEN])
             ->where(function ($query) use ($student): void {
                 $query

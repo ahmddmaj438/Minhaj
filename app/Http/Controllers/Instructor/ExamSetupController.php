@@ -8,6 +8,7 @@ use App\Http\Requests\Instructor\UpdateInstructorExamRequest;
 use App\Models\Course;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
+use App\Support\Exams\ExamDisplayFormatCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -32,6 +33,7 @@ class ExamSetupController extends Controller
                 ->orderBy('name')
                 ->get(),
             'exams' => $exams,
+            'displayFormats' => ExamDisplayFormatCatalog::formats(),
         ]);
     }
 
@@ -51,6 +53,7 @@ class ExamSetupController extends Controller
             'questions' => $questions,
             'questionEditRoutes' => $this->questionEditRoutes($questions),
             'totalQuestionMarks' => $questions->sum(fn (InstructorExamQuestion $question) => (float) $question->marks),
+            'displayFormats' => ExamDisplayFormatCatalog::formats(),
         ]);
     }
 

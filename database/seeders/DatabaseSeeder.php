@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
             'screen.dashboard.view',
             'screen.profile.edit.view',
             'screen.admin.access.index.view',
+            'screen.admin.settings.ai-configuration.edit.view',
             'screen.groups.index.view',
             'screen.users.index.view',
             'screen.users.create.view',
@@ -69,6 +70,7 @@ class DatabaseSeeder extends Seeder
             'screen.instructor.exams.edit.view',
             'screen.instructor.exams.question-types.index.view',
             'screen.instructor.exams.preview.show.view',
+            'screen.instructor.exams.publish.show.view',
             'screen.instructor.exams.questions.order.index.view',
             'screen.instructor.exams.questions.mcq.edit.view',
             'screen.instructor.exams.questions.true-false.edit.view',
@@ -80,6 +82,8 @@ class DatabaseSeeder extends Seeder
             'screen.instructor.grading.index.view',
             'screen.instructor.grading.sessions.show.view',
             'button.dashboard.group_management',
+            'button.admin.settings.ai-configuration.save',
+            'button.admin.settings.ai-configuration.test',
             'button.users.create.create_user',
             'button.data.table.create.create_record',
             'button.data.table.edit.update_record',
@@ -88,6 +92,8 @@ class DatabaseSeeder extends Seeder
             'button.exam.wizard.step2.next',
             'button.exam.wizard.finish.create_exam',
             'button.instructor.exams.store.save_draft',
+            'button.instructor.exams.publish',
+            'button.instructor.exams.unpublish',
             'button.instructor.exams.questions.select_type',
             'button.instructor.exams.questions.order.save',
             'button.instructor.exams.questions.order.delete',
@@ -181,6 +187,7 @@ class DatabaseSeeder extends Seeder
             'db.instructor_exam_questions.delete',
             'db.exam_session_answers.update',
             'db.exam_sessions.update',
+            'db.ai_configurations.update',
         ];
 
         $permissionIds = collect($permissionNames)->map(function (string $name) {

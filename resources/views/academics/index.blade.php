@@ -254,6 +254,7 @@
                                     <option value="{{ $exam->id }}" @selected((string) old('instructor_exam_id') === (string) $exam->id)>{{ $exam->title }} - {{ $exam->course?->code }}</option>
                                 @endforeach
                             </select>
+                            <p class="mt-2 text-xs text-slate-500">Only published exams are available for assignment.</p>
                         </div>
                         <div>
                             <label for="assignment_course_id" class="block text-sm font-medium text-slate-800">Course</label>

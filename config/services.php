@@ -62,4 +62,11 @@ return [
         ],
     ],
 
+    'ai' => [
+        'active_provider' => null,
+        'api_key' => null,
+        'model' => null,
+        'base_url' => null,
+    ],
+
 ];

@@ -13,6 +13,9 @@ class InstructorExam extends Model
 {
     public const STATUS_DRAFT = 'draft';
     public const STATUS_PUBLISHED = 'published';
+    public const FORMAT_ONE_QUESTION_AT_TIME = 'one_question_at_time';
+    public const FORMAT_ALL_QUESTIONS = 'all_questions';
+    public const FORMAT_GOOGLE_FORMS = 'google_forms';
 
     protected $fillable = [
         'course_id',
@@ -23,8 +26,10 @@ class InstructorExam extends Model
         'starts_at',
         'ends_at',
         'total_marks',
+        'display_format',
         'status',
         'published_at',
+        'tcexam_test_id',
     ];
 
     protected function casts(): array

@@ -28,6 +28,11 @@
                 </div>
             @endif
 
+            @include('instructor.exams.partials.workspace-nav', [
+                'exam' => null,
+                'active' => 'information',
+            ])
+
             <section class="mb-6 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                 <div class="flex flex-col gap-3 border-b border-slate-100 pb-5 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -86,7 +91,7 @@
                 <form method="POST" action="{{ route('instructor.exams.store') }}" class="space-y-6">
                     @csrf
 
-                    <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                    <section id="exam-information" class="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="border-b border-slate-100 pb-5">
                             <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">New exam</p>
                             <h3 class="mt-1 text-lg font-semibold text-slate-950">Create an exam shell</h3>
@@ -171,6 +176,24 @@
                         </div>
                     </section>
 
+                    <section id="exam-format" class="scroll-mt-24 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+                        <div class="border-b border-slate-100 pb-5">
+                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Exam Format</p>
+                            <h3 class="mt-1 text-lg font-semibold text-slate-950">Choose how students will see the exam</h3>
+                            <p class="mt-2 text-sm leading-6 text-slate-600">
+                                This controls the student exam page. You can still adjust questions and preview the exam before publishing.
+                            </p>
+                        </div>
+
+                        <div class="mt-6">
+                            @include('instructor.exams.partials.format-selector', [
+                                'formats' => $displayFormats,
+                                'selected' => old('display_format', \App\Models\Exam\InstructorExam::FORMAT_ONE_QUESTION_AT_TIME),
+                            ])
+                            <x-input-error :messages="$errors->get('display_format')" class="mt-3" />
+                        </div>
+                    </section>
+
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
@@ -205,15 +228,15 @@
                             <div class="flex gap-3 opacity-70">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">2</div>
                                 <div>
-                                    <p class="font-medium text-slate-900">Open workspace</p>
-                                    <p class="text-sm text-slate-600">Edit settings and add questions.</p>
+                                    <p class="font-medium text-slate-900">Choose format</p>
+                                    <p class="text-sm text-slate-600">Decide how students will view the exam.</p>
                                 </div>
                             </div>
                             <div class="flex gap-3 opacity-70">
                                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">3</div>
                                 <div>
-                                    <p class="font-medium text-slate-900">Preview</p>
-                                    <p class="text-sm text-slate-600">Review the student-facing structure.</p>
+                                    <p class="font-medium text-slate-900">Add questions</p>
+                                    <p class="text-sm text-slate-600">Build, order, preview, and publish.</p>
                                 </div>
                             </div>
                         </div>
