@@ -12,13 +12,13 @@
     <div class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             @if (session('status'))
-                <div class="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                <div role="status" aria-live="polite" class="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
                     {{ session('status') }}
                 </div>
             @endif
 
             @if ($errors->any())
-                <div class="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                <div role="alert" class="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
                     <p class="font-semibold">Please review the highlighted fields.</p>
                     <ul class="mt-2 list-disc space-y-1 ps-5">
                         @foreach ($errors->all() as $error)
@@ -43,27 +43,29 @@
                 </div>
 
                 @if ($exams->isEmpty())
-                    <div class="mt-5 rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-                        No exams have been created yet.
+                    <div class="empty-state mt-5">
+                        <strong class="block text-sm">{{ __('No exams have been created yet.') }}</strong>
+                        <span class="mt-1 block text-sm">{{ __('Use the form below to create the exam shell, then add questions from the workspace.') }}</span>
                     </div>
                 @else
                     <div class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         @foreach ($exams as $exam)
-                            <a href="{{ route('instructor.exams.edit', $exam) }}"
-                                class="flex min-h-44 flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-orange-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                            <article class="flex min-h-52 flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-orange-300 hover:shadow-md">
                                 <div>
                                     <div class="flex items-start justify-between gap-3">
                                         <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
-                                            {{ $exam->status }}
+                                            {{ __(ucfirst($exam->status)) }}
                                         </span>
                                         <span class="text-xs font-medium text-slate-500">
-                                            {{ $exam->questions_count }} questions
+                                            {{ __(':count questions', ['count' => $exam->questions_count]) }}
                                         </span>
                                     </div>
 
-                                    <h4 class="mt-4 text-base font-semibold text-slate-950">{{ $exam->title }}</h4>
+                                    <a href="{{ route('instructor.exams.edit', $exam) }}" class="mt-4 block text-base font-semibold text-slate-950 hover:text-orange-700">
+                                        {{ $exam->title }}
+                                    </a>
                                     <p class="mt-2 text-sm text-slate-600">
-                                        {{ $exam->course?->code ?? 'No course' }}
+                                        {{ $exam->course?->code ?? __('No course') }}
                                         @if ($exam->course)
                                             <span class="text-slate-400">/</span>
                                             {{ $exam->course->name }}
@@ -73,15 +75,30 @@
 
                                 <dl class="mt-5 grid grid-cols-2 gap-3 text-sm">
                                     <div class="rounded-md bg-slate-50 p-3">
-                                        <dt class="text-slate-500">Duration</dt>
-                                        <dd class="mt-1 font-semibold text-slate-900">{{ $exam->duration_minutes }} min</dd>
+                                        <dt class="text-slate-500">{{ __('Duration') }}</dt>
+                                        <dd class="mt-1 font-semibold text-slate-900">{{ __(':count min', ['count' => $exam->duration_minutes]) }}</dd>
                                     </div>
                                     <div class="rounded-md bg-slate-50 p-3">
-                                        <dt class="text-slate-500">Marks</dt>
+                                        <dt class="text-slate-500">{{ __('Marks') }}</dt>
                                         <dd class="mt-1 font-semibold text-slate-900">{{ $exam->total_marks }}</dd>
                                     </div>
                                 </dl>
-                            </a>
+
+                                <div class="mt-4 grid grid-cols-2 gap-2">
+                                    <a href="{{ route('instructor.exams.edit', $exam) }}" class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-700">
+                                        {{ __('Setup') }}
+                                    </a>
+                                    <a href="{{ route('instructor.exams.question-types.index', $exam) }}" class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-700">
+                                        {{ __('Questions') }}
+                                    </a>
+                                    <a href="{{ route('instructor.exams.preview.show', $exam) }}" class="inline-flex items-center justify-center rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-center text-xs font-semibold text-slate-700 hover:border-orange-300 hover:text-orange-700">
+                                        {{ __('Preview') }}
+                                    </a>
+                                    <a href="{{ route('instructor.exams.publish.show', $exam) }}" class="inline-flex items-center justify-center rounded-md bg-slate-950 px-3 py-2 text-center text-xs font-semibold text-white hover:bg-orange-600">
+                                        {{ __('Publish') }}
+                                    </a>
+                                </div>
+                            </article>
                         @endforeach
                     </div>
                 @endif
@@ -147,9 +164,10 @@
                                 <label for="duration_minutes" class="block text-sm font-medium text-slate-800">Duration</label>
                                 <div class="mt-2 flex rounded-md shadow-sm">
                                     <input id="duration_minutes" type="number" name="duration_minutes" value="{{ old('duration_minutes', 60) }}" min="5" max="600" required
-                                        class="block w-full rounded-l-md border-slate-300 focus:border-orange-500 focus:ring-orange-500">
-                                    <span class="inline-flex items-center rounded-r-md border border-l-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-600">minutes</span>
+                                        class="block w-full ltr:rounded-l-md rtl:rounded-r-md border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                    <span class="inline-flex items-center border border-slate-300 bg-slate-50 px-3 text-sm text-slate-600 ltr:rounded-r-md ltr:border-l-0 rtl:rounded-l-md rtl:border-r-0">minutes</span>
                                 </div>
+                                <p class="form-hint mt-2">{{ __('Use 5 to 600 minutes. Students see this as the exam timer.') }}</p>
                                 <x-input-error :messages="$errors->get('duration_minutes')" class="mt-2" />
                             </div>
 
@@ -157,6 +175,7 @@
                                 <label for="total_marks" class="block text-sm font-medium text-slate-800">Total marks</label>
                                 <input id="total_marks" type="number" step="0.01" min="1" name="total_marks" value="{{ old('total_marks', 100) }}" required
                                     class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                                <p class="form-hint mt-2">{{ __('Keep this aligned with the sum of question marks before publishing.') }}</p>
                                 <x-input-error :messages="$errors->get('total_marks')" class="mt-2" />
                             </div>
 
@@ -171,6 +190,7 @@
                                 <label for="ends_at" class="block text-sm font-medium text-slate-800">End date and time</label>
                                 <input id="ends_at" type="datetime-local" name="ends_at" value="{{ old('ends_at') }}"
                                     class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
+                                <p class="form-hint mt-2">{{ __('Leave start/end empty only when the exam should be controlled later through assignments.') }}</p>
                                 <x-input-error :messages="$errors->get('ends_at')" class="mt-2" />
                             </div>
                         </div>

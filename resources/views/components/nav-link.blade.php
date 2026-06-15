@@ -2,10 +2,10 @@
 
 @php
 $classes = ($active ?? false)
-            ? 'inline-flex items-center px-1 pt-1 border-b-2 border-orange-400 text-sm font-medium leading-5 text-slate-900 focus:outline-none focus:border-orange-500 transition duration-150 ease-in-out'
-            : 'inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-slate-500 hover:text-slate-800 hover:border-orange-300 focus:outline-none focus:text-slate-700 focus:border-orange-300 transition duration-150 ease-in-out';
+            ? 'inline-flex min-h-11 items-center rounded-full bg-orange-100 px-3.5 py-2 text-sm font-semibold leading-5 text-brand-ink shadow-inner-soft focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100'
+            : 'inline-flex min-h-11 items-center rounded-full px-3.5 py-2 text-sm font-semibold leading-5 text-slate-700 hover:bg-white/80 hover:text-brand-ink focus:outline-none focus-visible:ring-4 focus-visible:ring-orange-100';
 @endphp
 
-<a {{ $attributes->merge(['class' => $classes]) }}>
+<a {{ $attributes->merge(['class' => $classes]) }} @if ($active ?? false) aria-current="page" @endif>
     {{ $slot }}
 </a>

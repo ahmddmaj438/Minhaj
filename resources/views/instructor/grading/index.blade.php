@@ -12,7 +12,7 @@
     <div class="py-8">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             @if (session('status'))
-                <div class="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                <div role="status" aria-live="polite" class="mb-6 rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
                     {{ session('status') }}
                 </div>
             @endif
@@ -22,7 +22,7 @@
                     <h3 class="text-lg font-semibold text-slate-950">Submissions</h3>
                     <p class="mt-1 text-sm text-slate-500">Open a submission to review auto-calculated questions and assign manual scores.</p>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="table-comfort overflow-x-auto">
                     <table class="min-w-full text-left text-sm">
                         <thead class="bg-slate-100 text-xs uppercase text-slate-600">
                             <tr>
@@ -69,7 +69,12 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-8 text-center text-slate-500">No submitted exams yet.</td>
+                                    <td colspan="6" class="px-4 py-8">
+                                        <div class="empty-state text-center">
+                                            <strong class="block text-base">No submitted exams yet</strong>
+                                            <span class="mt-1 block text-sm">Student submissions will appear here as soon as exams are completed.</span>
+                                        </div>
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>

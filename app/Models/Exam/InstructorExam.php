@@ -5,6 +5,7 @@ namespace App\Models\Exam;
 use App\Models\Course;
 use App\Models\ExamAssignment;
 use App\Models\User;
+use App\Support\Exams\ExamDisplayFormatCatalog;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -60,5 +61,15 @@ class InstructorExam extends Model
     public function assignments(): HasMany
     {
         return $this->hasMany(ExamAssignment::class);
+    }
+
+    public function displayFormatKey(): string
+    {
+        return ExamDisplayFormatCatalog::normalize($this->display_format);
+    }
+
+    public function displayFormatMeta(): array
+    {
+        return ExamDisplayFormatCatalog::find($this->display_format);
     }
 }

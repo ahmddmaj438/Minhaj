@@ -132,7 +132,7 @@ class StudentExamController extends Controller
         $this->authorizePublishedExam($session);
         $this->authorizeOpenSession($session, $student, $sessionManager, false);
 
-        $answers = $request->input('answers', []);
+        $answers = $this->validatedAnswers($request);
         $responseManager->saveDrafts($session->load('assignment.exam.questions'), $answers);
         $activityLogger->record($session, ExamActivityLog::EVENT_ANSWERS_SAVED, [
             'answer_count' => count($answers),
@@ -157,7 +157,7 @@ class StudentExamController extends Controller
             ]);
         }
 
-        $responseManager->saveDrafts($session->load('assignment.exam.questions'), $request->input('answers', []));
+        $responseManager->saveDrafts($session->load('assignment.exam.questions'), $this->validatedAnswers($request));
         $timedOut = $session->expires_at && now()->gt($session->expires_at);
         $sessionManager->submit($session, timedOut: $timedOut);
 
@@ -175,6 +175,25 @@ class StudentExamController extends Controller
         abort_unless($profile instanceof StudentProfile, 403, 'Student portal is available only to student users.');
 
         return $profile;
+    }
+
+    private function validatedAnswers(Request $request): array
+    {
+        $data = $request->validate([
+            'answers' => ['nullable', 'array', 'max:500'],
+            'answers.*' => ['nullable', 'array'],
+            'answers.*.selected_options' => ['nullable', 'array', 'max:50'],
+            'answers.*.selected_options.*' => ['nullable', 'string', 'max:255'],
+            'answers.*.answer' => ['nullable', 'string', 'in:true,false'],
+            'answers.*.correction' => ['nullable', 'string', 'max:5000'],
+            'answers.*.matches' => ['nullable', 'array', 'max:200'],
+            'answers.*.matches.*' => ['nullable', 'string', 'max:5000'],
+            'answers.*.blanks' => ['nullable', 'array', 'max:200'],
+            'answers.*.blanks.*' => ['nullable', 'string', 'max:5000'],
+            'answers.*.response' => ['nullable', 'string', 'max:20000'],
+        ]);
+
+        return $data['answers'] ?? [];
     }
 
     private function authorizeSession(ExamSession $session, StudentProfile $student): void

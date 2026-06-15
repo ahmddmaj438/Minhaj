@@ -8,9 +8,35 @@ class ExamDisplayFormatCatalog
     public const ALL_QUESTIONS = 'all_questions';
     public const GOOGLE_FORMS = 'google_forms';
 
+    public const DEFAULT = self::ONE_QUESTION_AT_TIME;
+
     public static function keys(): array
     {
         return array_keys(self::formats());
+    }
+
+    public static function defaultKey(): string
+    {
+        return self::DEFAULT;
+    }
+
+    public static function normalize(?string $format): string
+    {
+        return in_array($format, self::keys(), true)
+            ? $format
+            : self::DEFAULT;
+    }
+
+    public static function find(?string $format): array
+    {
+        $formats = self::formats();
+
+        return $formats[self::normalize($format)];
+    }
+
+    public static function title(?string $format): string
+    {
+        return self::find($format)['title'];
     }
 
     public static function formats(): array

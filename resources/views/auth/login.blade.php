@@ -2,6 +2,12 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    <div class="mb-6">
+        <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Welcome back') }}</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-950">{{ __('Sign in to Minhaj') }}</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">{{ __('Continue managing exams, grading, access, and academic workflows.') }}</p>
+    </div>
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
@@ -27,19 +33,19 @@
         <!-- Remember Me -->
         <div class="block mt-4">
             <label for="remember_me" class="inline-flex items-center">
-                <input id="remember_me" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
-                <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+                <input id="remember_me" type="checkbox" class="rounded border-slate-300 text-brand-navy shadow-sm focus:ring-orange-200" name="remember">
+                <span class="ms-2 text-sm font-medium text-slate-600">{{ __('Remember me') }}</span>
             </label>
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             @if (Route::has('password.request'))
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}">
+                <a class="text-sm font-semibold text-slate-600 hover:text-orange-700 focus:outline-none focus:ring-4 focus:ring-orange-100 rounded-lg" href="{{ route('password.request') }}">
                     {{ __('Forgot your password?') }}
                 </a>
             @endif
 
-            <x-primary-button class="ms-3">
+            <x-primary-button class="sm:ms-3">
                 {{ __('Log in') }}
             </x-primary-button>
         </div>

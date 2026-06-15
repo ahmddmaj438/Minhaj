@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AdminAccessController extends Controller
@@ -74,7 +75,7 @@ class AdminAccessController extends Controller
 
         $data = $request->validate([
             'screens' => ['array'],
-            'screens.*' => ['string'],
+            'screens.*' => ['string', Rule::in($this->availableScreenNames())],
         ]);
 
         $role = $group->roles()->firstOrCreate(
@@ -93,7 +94,7 @@ class AdminAccessController extends Controller
 
         $data = $request->validate([
             'buttons' => ['array'],
-            'buttons.*' => ['string'],
+            'buttons.*' => ['string', Rule::in($this->availableButtonKeys())],
         ]);
 
         $role = $group->roles()->firstOrCreate(
@@ -112,7 +113,7 @@ class AdminAccessController extends Controller
 
         $data = $request->validate([
             'db_permissions' => ['array'],
-            'db_permissions.*' => ['string'],
+            'db_permissions.*' => ['string', Rule::in($this->availableDbPermissionKeys())],
         ]);
 
         $role = $group->roles()->firstOrCreate(
@@ -206,5 +207,30 @@ class AdminAccessController extends Controller
         }
 
         return $base;
+    }
+
+    private function availableScreenNames(): array
+    {
+        return collect($this->availableScreens())->pluck('name')->all();
+    }
+
+    private function availableButtonKeys(): array
+    {
+        return collect($this->availableButtons())
+            ->flatMap(fn (array $buttons, string $page) => collect($buttons)
+                ->map(fn (string $button): string => $page.'.'.$button))
+            ->values()
+            ->all();
+    }
+
+    private function availableDbPermissionKeys(): array
+    {
+        $actions = ['select', 'insert', 'update', 'delete'];
+
+        return collect(Schema::getTableListing())
+            ->flatMap(fn (string $table) => collect($actions)
+                ->map(fn (string $action): string => $table.'.'.$action))
+            ->values()
+            ->all();
     }
 }

@@ -5,6 +5,7 @@ namespace App\Services\TCExam;
 use App\Models\Course;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
+use App\Support\Exams\ExamDisplayFormatCatalog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -316,7 +317,7 @@ class TCExamBuilderSync
     private function examDescription(InstructorExam $exam): string
     {
         $description = $exam->description ?: 'Created from MINHAJ Exam Builder.';
-        $format = $exam->display_format ?? InstructorExam::FORMAT_ONE_QUESTION_AT_TIME;
+        $format = ExamDisplayFormatCatalog::normalize($exam->display_format);
 
         return $description."\n\nMINHAJ display format: ".$format;
     }

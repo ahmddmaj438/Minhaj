@@ -1,8 +1,7 @@
 <x-app-layout>
     @php
-        $displayFormat = $exam->display_format ?? \App\Models\Exam\InstructorExam::FORMAT_ONE_QUESTION_AT_TIME;
-        $formatMeta = \App\Support\Exams\ExamDisplayFormatCatalog::formats()[$displayFormat]
-            ?? \App\Support\Exams\ExamDisplayFormatCatalog::formats()[\App\Models\Exam\InstructorExam::FORMAT_ONE_QUESTION_AT_TIME];
+        $displayFormat = \App\Support\Exams\ExamDisplayFormatCatalog::normalize($exam->display_format);
+        $formatMeta = \App\Support\Exams\ExamDisplayFormatCatalog::find($displayFormat);
         $questionTotal = max($questions->count(), 1);
         $sectionedQuestions = $questions->groupBy(fn ($question) => $question->topic ?: str($question->category)->replace('_', ' ')->title()->toString());
     @endphp
@@ -37,7 +36,7 @@
             @endif
 
             <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
-                <form method="POST" action="{{ route('student.exams.sessions.answers.save', $session) }}" class="space-y-6" data-exam-session-form>
+                <form method="POST" action="{{ route('student.exams.sessions.answers.save', $session) }}" class="space-y-6" data-exam-session-form data-exam-template="{{ $displayFormat }}">
                     @csrf
 
                     <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
@@ -91,7 +90,7 @@
                                                 class="relative flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition"
                                                 :class="current === {{ $index }} ? 'border-orange-500 bg-orange-50 text-orange-700' : 'border-slate-200 bg-white text-slate-700 hover:border-orange-300'">
                                                 {{ $index + 1 }}
-                                                <span x-show="flagged[{{ $question->id }}]" class="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                                                <span x-show="flagged[{{ $question->id }}]" x-cloak class="absolute -end-1 -top-1 h-2.5 w-2.5 rounded-full bg-amber-500"></span>
                                             </button>
                                         @endforeach
                                     </div>
@@ -99,7 +98,7 @@
                             </div>
 
                             @foreach ($questions as $index => $question)
-                                <div x-show="current === {{ $index }}" x-transition>
+                                <div x-show="current === {{ $index }}" x-transition x-cloak>
                                     <div class="mb-4 flex flex-col gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
                                             <p class="text-sm font-semibold text-amber-900">Need to review this question?</p>

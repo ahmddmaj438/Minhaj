@@ -6,28 +6,42 @@
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
-                <div class="bg-orange-100 text-orange-800 p-3 rounded">{{ session('status') }}</div>
+                <div role="status" aria-live="polite" class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{{ session('status') }}</div>
             @endif
 
             <div class="bg-white/95 shadow-sm rounded-xl border border-orange-100 p-6">
-                <h3 class="text-lg font-semibold mb-3">Step 1: Create Group</h3>
-                <form method="POST" action="{{ route('admin.groups.store') }}" class="grid gap-3 md:grid-cols-3">
+                <h3 class="text-lg font-semibold text-slate-950 mb-1">Step 1: Create Group</h3>
+                <p class="mb-4 text-sm text-slate-600">Use a clear name and a stable slug. The slug is used for permission setup and should not change often.</p>
+                <form method="POST" action="{{ route('admin.groups.store') }}" class="grid gap-4 md:grid-cols-3">
                     @csrf
-                    <x-text-input name="name" type="text" class="block w-full" placeholder="Group Name" required />
-                    <x-text-input name="slug" type="text" class="block w-full" placeholder="group_slug" required />
-                    <x-primary-button>Create Group</x-primary-button>
+                    <div>
+                        <x-input-label for="name" value="Group Name" required />
+                        <x-text-input id="name" name="name" type="text" class="mt-2 block w-full" placeholder="Instructor Team" required />
+                    </div>
+                    <div>
+                        <x-input-label for="slug" value="Group Slug" required />
+                        <x-text-input id="slug" name="slug" type="text" class="mt-2 block w-full" placeholder="instructor_team" required />
+                    </div>
+                    <div class="flex items-end">
+                        <x-primary-button class="w-full">Create Group</x-primary-button>
+                    </div>
                 </form>
             </div>
 
             <div class="bg-white/95 shadow-sm rounded-xl border border-orange-100 p-6">
                 <h3 class="text-lg font-semibold mb-3">Select Group To Configure</h3>
                 <div class="flex flex-wrap gap-2">
-                    @foreach ($groups as $group)
+                    @forelse ($groups as $group)
                         <a href="{{ route('admin.access.index', ['group' => $group->id]) }}"
-                           class="px-3 py-2 rounded border {{ $selectedGroup?->id === $group->id ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-slate-800 border-orange-100' }}">
+                           class="inline-flex min-h-11 items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold {{ $selectedGroup?->id === $group->id ? 'bg-orange-600 text-white border-orange-600' : 'bg-white text-slate-800 border-orange-100 hover:bg-orange-50' }}">
                             {{ $group->name }}
                         </a>
-                    @endforeach
+                    @empty
+                        <div class="empty-state w-full">
+                            <strong class="block text-base">No groups yet</strong>
+                            <span class="mt-1 block text-sm">Create a group first, then permissions will appear here.</span>
+                        </div>
+                    @endforelse
                 </div>
             </div>
 
@@ -40,7 +54,7 @@
                         <div class="grid gap-2 md:grid-cols-2">
                             @foreach ($availableScreens as $screen)
                                 @php($perm = 'screen.' . $screen['name'] . '.view')
-                                <label class="flex items-center gap-2 text-sm">
+                                <label class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800 hover:border-orange-200 hover:bg-orange-50">
                                     <input type="checkbox" name="screens[]" value="{{ $screen['name'] }}" @checked(in_array($perm, $assignedPermissionNames, true))>
                                     <span>{{ $screen['name'] }} <span class="text-slate-500">({{ $screen['uri'] }})</span></span>
                                 </label>
@@ -57,12 +71,12 @@
                         @method('PUT')
                         <div class="space-y-3">
                             @foreach ($availableButtons as $page => $buttons)
-                                <div class="border border-orange-100 rounded p-3">
-                                    <div class="font-medium mb-2">{{ $page }}</div>
+                                <div class="rounded-xl border border-orange-100 bg-white p-3">
+                                    <div class="font-semibold text-slate-950 mb-2">{{ $page }}</div>
                                     <div class="grid gap-2 md:grid-cols-2">
                                         @foreach ($buttons as $button)
                                             @php($perm = 'button.' . $page . '.' . $button)
-                                            <label class="flex items-center gap-2 text-sm">
+                                            <label class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800 hover:border-orange-200 hover:bg-orange-50">
                                                 <input type="checkbox" name="buttons[]" value="{{ $page . '.' . $button }}" @checked(in_array($perm, $assignedPermissionNames, true))>
                                                 <span>{{ $button }}</span>
                                             </label>
@@ -82,12 +96,12 @@
                         @method('PUT')
                         <div class="space-y-2">
                             @foreach ($availableTables as $table)
-                                <div class="border border-orange-100 rounded p-3">
-                                    <div class="font-medium">{{ $table }}</div>
+                                <div class="rounded-xl border border-orange-100 bg-white p-3">
+                                    <div class="font-semibold text-slate-950">{{ $table }}</div>
                                     <div class="flex flex-wrap gap-3 mt-2 text-sm">
                                         @foreach (['select', 'insert', 'update', 'delete'] as $dml)
                                             @php($perm = 'db.' . $table . '.' . $dml)
-                                            <label class="flex items-center gap-2">
+                                            <label class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 font-medium text-slate-800 hover:border-orange-200 hover:bg-orange-50">
                                                 <input type="checkbox" name="db_permissions[]" value="{{ $table . '.' . $dml }}" @checked(in_array($perm, $assignedPermissionNames, true))>
                                                 <span>{{ strtoupper($dml) }}</span>
                                             </label>
@@ -107,7 +121,7 @@
                         @method('PUT')
                         <div class="grid gap-2 md:grid-cols-2">
                             @foreach ($users as $user)
-                                <label class="flex items-center gap-2 text-sm">
+                                <label class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-800 hover:border-orange-200 hover:bg-orange-50">
                                     <input type="checkbox" name="user_ids[]" value="{{ $user->id }}" @checked($selectedGroup->users->contains('id', $user->id))>
                                     <span>{{ $user->name }} ({{ $user->email }})</span>
                                 </label>

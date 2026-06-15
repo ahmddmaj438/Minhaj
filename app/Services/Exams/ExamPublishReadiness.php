@@ -3,6 +3,7 @@
 namespace App\Services\Exams;
 
 use App\Models\Exam\InstructorExam;
+use App\Support\Exams\ExamDisplayFormatCatalog;
 
 class ExamPublishReadiness
 {
@@ -30,7 +31,7 @@ class ExamPublishReadiness
                 'key' => 'format',
                 'label' => 'Exam format',
                 'description' => 'A student display format has been selected.',
-                'passed' => filled($exam->display_format),
+                'passed' => in_array($exam->display_format, ExamDisplayFormatCatalog::keys(), true),
                 'action' => route('instructor.exams.edit', $exam).'#exam-format',
             ],
             [

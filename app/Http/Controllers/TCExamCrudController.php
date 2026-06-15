@@ -7,15 +7,29 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class TCExamCrudController extends Controller
 {
-    public function tables(): View
+    public function tables(Request $request): View
     {
+        $search = trim((string) $request->query('q', ''));
+        $tables = collect($this->allowedTables())
+            ->when($search !== '', function ($tables) use ($search) {
+                return $tables->filter(function (string $table) use ($search): bool {
+                    return str_contains(Str::lower($table), Str::lower($search))
+                        || str_contains(Str::lower($this->tableDisplayName($table)), Str::lower($search));
+                });
+            })
+            ->values()
+            ->all();
+
         return view('data.tables', [
-            'tables' => $this->allowedTables(),
+            'tables' => $tables,
             'displayName' => fn (string $t) => $this->tableDisplayName($t),
+            'search' => $search,
+            'totalTables' => count($this->allowedTables()),
         ]);
     }
 
@@ -63,9 +77,12 @@ class TCExamCrudController extends Controller
 
         $columns = $this->formFields($table);
         $pk = $this->singlePrimaryKey($table);
+        $this->validateDynamicPayload($request, $columns, $pk, true);
         $payload = $this->extractPayload($request, $columns, $pk, true);
 
-        DB::table($table)->insert($payload);
+        $this->ensurePayloadIsNotEmpty($payload);
+
+        DB::transaction(fn () => DB::table($table)->insert($payload));
 
         return redirect()->route('data.table.index', ['table' => $table])->with('status', 'Record created.');
     }
@@ -99,9 +116,14 @@ class TCExamCrudController extends Controller
 
         $pk = $this->singlePrimaryKey($table);
         abort_if(! $pk, 422, 'Update is available only for tables with a single primary key.');
+        abort_if(! DB::table($table)->where($pk, $id)->exists(), 404);
 
-        $payload = $this->extractPayload($request, $this->formFields($table), $pk, false);
-        DB::table($table)->where($pk, $id)->update($payload);
+        $columns = $this->formFields($table);
+        $this->validateDynamicPayload($request, $columns, $pk, false);
+        $payload = $this->extractPayload($request, $columns, $pk, false);
+        $this->ensurePayloadIsNotEmpty($payload);
+
+        DB::transaction(fn () => DB::table($table)->where($pk, $id)->update($payload));
 
         return redirect()->route('data.table.index', ['table' => $table])->with('status', 'Record updated.');
     }
@@ -114,8 +136,9 @@ class TCExamCrudController extends Controller
 
         $pk = $this->singlePrimaryKey($table);
         abort_if(! $pk, 422, 'Delete is available only for tables with a single primary key.');
+        abort_if(! DB::table($table)->where($pk, $id)->exists(), 404);
 
-        DB::table($table)->where($pk, $id)->delete();
+        DB::transaction(fn () => DB::table($table)->where($pk, $id)->delete());
 
         return back()->with('status', 'Record deleted.');
     }
@@ -218,6 +241,57 @@ class TCExamCrudController extends Controller
         }
 
         return $payload;
+    }
+
+    private function validateDynamicPayload(Request $request, array $columns, ?string $primaryKey, bool $create): void
+    {
+        $rules = [];
+        $attributes = [];
+
+        foreach ($columns as $column) {
+            $name = $column['name'];
+
+            if ($primaryKey === $name && $create) {
+                continue;
+            }
+
+            $attributes[$name] = $column['label'];
+            $fieldRules = [$column['required'] ? 'required' : 'nullable'];
+
+            $input = $column['input'] ?? 'text';
+            $type = $column['type'] ?? '';
+
+            if ($input === 'checkbox') {
+                $fieldRules[] = 'boolean';
+            } elseif ($input === 'email') {
+                $fieldRules[] = 'email';
+                $fieldRules[] = 'max:255';
+            } elseif (in_array($input, ['date', 'datetime-local'], true)) {
+                $fieldRules[] = 'date';
+            } elseif ($input === 'json') {
+                $fieldRules[] = 'json';
+            } elseif (str_contains($type, 'int')) {
+                $fieldRules[] = 'integer';
+            } elseif (str_contains($type, 'decimal') || str_contains($type, 'numeric') || str_contains($type, 'real') || str_contains($type, 'float')) {
+                $fieldRules[] = 'numeric';
+            } else {
+                $fieldRules[] = 'string';
+                $fieldRules[] = in_array($input, ['textarea', 'password'], true) ? 'max:10000' : 'max:255';
+            }
+
+            $rules[$name] = $fieldRules;
+        }
+
+        $request->validate($rules, [], $attributes);
+    }
+
+    private function ensurePayloadIsNotEmpty(array $payload): void
+    {
+        if ($payload === []) {
+            throw ValidationException::withMessages([
+                'record' => 'No editable values were submitted.',
+            ]);
+        }
     }
 
     private function foreignOptions(string $table): array

@@ -17,6 +17,7 @@ use App\Http\Controllers\Instructor\PacketTracerQuestionController;
 use App\Http\Controllers\Instructor\QuestionOrderingController;
 use App\Http\Controllers\Instructor\QuestionTypeController;
 use App\Http\Controllers\Instructor\TrueFalseQuestionController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Student\StudentExamController;
 use App\Http\Controllers\SuperUserController;
@@ -38,7 +39,10 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::post('/language', [LanguageController::class, 'update'])->name('language.switch');
+
 Route::get('/dashboard', function () {
+    $user = request()->user();
     $now = CarbonImmutable::now();
     $lastSevenDays = collect(range(6, 0))->map(fn (int $daysAgo) => $now->subDays($daysAgo));
 
@@ -89,8 +93,8 @@ Route::get('/dashboard', function () {
             : 0;
 
         return [
-            'label' => $day->format('D'),
-            'date' => $day->format('M j'),
+            'label' => $day->translatedFormat('D'),
+            'date' => $day->translatedFormat('M j'),
             'completed' => $completed,
         ];
     });
@@ -99,35 +103,46 @@ Route::get('/dashboard', function () {
 
     $recentExams = Schema::hasTable('instructor_exams')
         ? InstructorExam::with('course')
+            ->withCount('questions')
+            ->when(! $user?->isSuperAdmin(), fn ($query) => $query->where('instructor_id', $user?->id))
             ->latest()
             ->limit(5)
-            ->get(['id', 'course_id', 'title', 'status', 'total_marks', 'created_at'])
+            ->get(['id', 'course_id', 'instructor_id', 'title', 'status', 'total_marks', 'created_at', 'updated_at'])
         : collect();
+
+    $nextDraftExam = Schema::hasTable('instructor_exams')
+        ? InstructorExam::with('course')
+            ->withCount('questions')
+            ->where('status', InstructorExam::STATUS_DRAFT)
+            ->when(! $user?->isSuperAdmin(), fn ($query) => $query->where('instructor_id', $user?->id))
+            ->latest('updated_at')
+            ->first(['id', 'course_id', 'instructor_id', 'title', 'status', 'duration_minutes', 'total_marks', 'updated_at'])
+        : null;
 
     return view('dashboard', [
         'stats' => [
             [
-                'label' => 'Total Users',
+                'label' => __('Total Users'),
                 'value' => User::count(),
-                'detail' => 'Registered platform accounts',
+                'detail' => __('Registered platform accounts'),
                 'tone' => 'blue',
             ],
             [
-                'label' => 'Exams',
+                'label' => __('Exams'),
                 'value' => $localExamCount + $tcexamTestCount,
-                'detail' => $publishedExamCount.' published, '.$tcexamTestCount.' TCExam',
+                'detail' => __(':published published, :tcexam TCExam', ['published' => $publishedExamCount, 'tcexam' => $tcexamTestCount]),
                 'tone' => 'orange',
             ],
             [
-                'label' => 'Questions',
+                'label' => __('Questions'),
                 'value' => $questionCount,
-                'detail' => $answerCount.' answer choices stored',
+                'detail' => __(':answers answer choices stored', ['answers' => $answerCount]),
                 'tone' => 'emerald',
             ],
             [
-                'label' => 'Results',
+                'label' => __('Results'),
                 'value' => $resultCount,
-                'detail' => $passRate.'% pass rate',
+                'detail' => __(':rate% pass rate', ['rate' => $passRate]),
                 'tone' => 'violet',
             ],
         ],
@@ -142,6 +157,7 @@ Route::get('/dashboard', function () {
         'completionTrend' => $completionTrend,
         'maxTrend' => $maxTrend,
         'recentExams' => $recentExams,
+        'nextDraftExam' => $nextDraftExam,
         'passRate' => $passRate,
     ]);
 })->middleware(['auth', 'verified', 'screen'])->name('dashboard');

@@ -114,8 +114,8 @@
                                     <label for="duration_minutes" class="block text-sm font-medium text-slate-800">Duration</label>
                                     <div class="mt-2 flex rounded-md shadow-sm">
                                         <input id="duration_minutes" type="number" name="duration_minutes" value="{{ old('duration_minutes', $exam->duration_minutes) }}" min="5" max="600" required
-                                            class="block w-full rounded-l-md border-slate-300 focus:border-orange-500 focus:ring-orange-500">
-                                        <span class="inline-flex items-center rounded-r-md border border-l-0 border-slate-300 bg-slate-50 px-3 text-sm text-slate-600">minutes</span>
+                                            class="block w-full ltr:rounded-l-md rtl:rounded-r-md border-slate-300 focus:border-orange-500 focus:ring-orange-500">
+                                        <span class="inline-flex items-center border border-slate-300 bg-slate-50 px-3 text-sm text-slate-600 ltr:rounded-r-md ltr:border-l-0 rtl:rounded-l-md rtl:border-r-0">minutes</span>
                                     </div>
                                     <x-input-error :messages="$errors->get('duration_minutes')" class="mt-2" />
                                 </div>

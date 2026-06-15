@@ -20,8 +20,8 @@ class UpdatePacketTracerQuestionRequest extends FormRequest
             'instructions' => ['nullable', 'string', 'max:5000'],
             'expected_tasks' => ['required', 'string', 'max:10000'],
             'configuration_notes' => ['nullable', 'string', 'max:10000'],
-            'pkt_file' => ['nullable', 'file', 'max:51200'],
-            'topology_screenshot' => ['nullable', 'image', 'max:10240'],
+            'pkt_file' => ['nullable', 'file', 'extensions:pkt', 'max:51200'],
+            'topology_screenshot' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:10240'],
             'marks' => ['required', 'numeric', 'min:0.25', 'max:9999.99'],
             'difficulty' => ['nullable', 'string', 'in:easy,medium,hard,advanced'],
             'topic' => ['nullable', 'string', 'max:255'],
@@ -39,6 +39,19 @@ class UpdatePacketTracerQuestionRequest extends FormRequest
 
                 if ($file && strtolower($file->getClientOriginalExtension()) !== 'pkt') {
                     $validator->errors()->add('pkt_file', 'The Packet Tracer file must use the .pkt extension.');
+                }
+
+                if ($file && ! $file->isValid()) {
+                    $validator->errors()->add('pkt_file', 'The Packet Tracer file upload was not completed successfully.');
+                }
+
+                if ($file && in_array($file->getMimeType(), ['text/html', 'text/x-php', 'application/x-httpd-php'], true)) {
+                    $validator->errors()->add('pkt_file', 'The Packet Tracer file type is not allowed.');
+                }
+
+                $screenshot = $this->file('topology_screenshot');
+                if ($screenshot && ! $screenshot->isValid()) {
+                    $validator->errors()->add('topology_screenshot', 'The topology screenshot upload was not completed successfully.');
                 }
             },
         ];

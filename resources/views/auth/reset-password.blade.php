@@ -1,4 +1,10 @@
 <x-guest-layout>
+    <div class="mb-6">
+        <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Set password') }}</p>
+        <h1 class="mt-1 text-2xl font-bold text-slate-950">{{ __('Choose a new password') }}</h1>
+        <p class="mt-2 text-sm leading-6 text-slate-600">{{ __('Use a strong password to keep your Minhaj workspace secure.') }}</p>
+    </div>
+
     <form method="POST" action="{{ route('password.store') }}">
         @csrf
 
@@ -30,7 +36,7 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center justify-end mt-4">
+        <div class="flex items-center justify-end mt-6">
             <x-primary-button>
                 {{ __('Reset Password') }}
             </x-primary-button>

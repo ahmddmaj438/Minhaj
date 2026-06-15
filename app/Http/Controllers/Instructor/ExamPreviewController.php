@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
+use App\Support\Exams\ExamDisplayFormatCatalog;
 use Illuminate\View\View;
 
 class ExamPreviewController extends Controller
@@ -14,11 +15,15 @@ class ExamPreviewController extends Controller
         abort_unless(auth()->id() === $exam->instructor_id || auth()->user()?->isSuperAdmin(), 403);
 
         $questions = $exam->questions()->get();
+        $displayFormat = ExamDisplayFormatCatalog::normalize($exam->display_format);
 
         return view('instructor.exams.preview', [
-            'exam' => $exam->load('course'),
+            'exam' => $exam->load(['course', 'instructor']),
             'questions' => $questions,
             'totalQuestionMarks' => $questions->sum(fn (InstructorExamQuestion $question) => (float) $question->marks),
+            'displayFormat' => $displayFormat,
+            'formatMeta' => ExamDisplayFormatCatalog::find($displayFormat),
+            'displayFormats' => ExamDisplayFormatCatalog::formats(),
         ]);
     }
 }

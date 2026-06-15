@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Instructor\UpdatePacketTracerQuestionRequest;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class PacketTracerQuestionController extends Controller
@@ -94,7 +96,7 @@ class PacketTracerQuestionController extends Controller
         abort_unless($question->type === 'packet_tracer', 404);
     }
 
-    private function storeResource($file, InstructorExam $exam, InstructorExamQuestion $question, string $kind): array
+    private function storeResource(UploadedFile $file, InstructorExam $exam, InstructorExamQuestion $question, string $kind): array
     {
         $path = $file->store("exam-resources/exams/{$exam->id}/questions/{$question->id}", 'local');
 
@@ -102,10 +104,18 @@ class PacketTracerQuestionController extends Controller
             'kind' => $kind,
             'disk' => 'local',
             'path' => $path,
-            'original_name' => $file->getClientOriginalName(),
+            'original_name' => $this->safeOriginalName($file),
             'mime_type' => $file->getClientMimeType(),
             'size' => $file->getSize(),
             'uploaded_at' => now()->toISOString(),
         ];
+    }
+
+    private function safeOriginalName(UploadedFile $file): string
+    {
+        $name = pathinfo(str_replace(['\\', '/'], '', $file->getClientOriginalName()), PATHINFO_BASENAME);
+        $name = preg_replace('/[\x00-\x1F\x7F]+/', '', $name) ?: 'uploaded-file';
+
+        return Str::limit($name, 180, '');
     }
 }
