@@ -3,12 +3,16 @@
 namespace App\Models;
 
 use App\Models\Exam\InstructorExam;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Course extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'code',
         'name',
@@ -45,5 +49,13 @@ class Course extends Model
     public function examAssignments(): HasMany
     {
         return $this->hasMany(ExamAssignment::class);
+    }
+
+    public function teachers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->wherePivot('role', 'teacher')
+            ->withPivot(['role', 'assigned_by', 'assigned_at'])
+            ->withTimestamps();
     }
 }

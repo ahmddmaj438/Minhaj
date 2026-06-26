@@ -27,6 +27,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_active',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
 
@@ -70,6 +72,13 @@ class User extends Authenticatable
     public function assignedExams(): HasMany
     {
         return $this->hasMany(ExamAssignment::class, 'assigned_by');
+    }
+
+    public function assignedCourses(): BelongsToMany
+    {
+        return $this->belongsToMany(Course::class)
+            ->withPivot(['role', 'assigned_by', 'assigned_at'])
+            ->withTimestamps();
     }
 
     public function isStudent(): bool
@@ -105,5 +114,16 @@ class User extends Authenticatable
     public function isSuperAdmin(): bool
     {
         return $this->isRootSuperAdmin() || $this->roles()->where('slug', 'super_admin')->exists();
+    }
+
+    public function hasAdministrativeAccess(): bool
+    {
+        return $this->isSuperAdmin()
+            || $this->roles()
+                ->whereHas('permissions', fn ($query) => $query->where('name', 'screen.admin.access.index.view'))
+                ->exists()
+            || $this->groups()
+                ->whereHas('roles.permissions', fn ($query) => $query->where('name', 'screen.admin.access.index.view'))
+                ->exists();
     }
 }

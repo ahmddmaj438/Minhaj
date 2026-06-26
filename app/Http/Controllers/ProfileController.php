@@ -26,7 +26,7 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        abort_unless($request->user()->can('db.users.update'), 403, 'You are not allowed to update users table.');
+        abort_unless($request->user()->can('db.users.update'), 403, __('You do not have permission to update this profile.'));
 
         $request->user()->fill($request->validated());
 
@@ -44,7 +44,7 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
-        abort_unless($request->user()->can('db.users.delete'), 403, 'You are not allowed to delete users.');
+        abort_unless($request->user()->can('db.users.delete'), 403, __('You do not have permission to remove this account.'));
 
         $request->validateWithBag('userDeletion', [
             'password' => ['required', 'current_password'],

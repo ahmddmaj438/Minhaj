@@ -8,9 +8,9 @@
         <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <p class="text-sm font-medium text-orange-600">{{ __('Exam Builder') }}</p>
-                <h2 class="text-2xl font-semibold leading-tight text-slate-950">{{ __('Preview Exam') }}</h2>
+                <h2 class="text-2xl font-semibold leading-tight text-slate-950">{{ __('Preview as Student') }}</h2>
             </div>
-            <div class="text-sm text-slate-500">{{ __('Step 4 of 5: Preview') }}</div>
+            <div class="text-sm text-slate-500">{{ __('Step 5 of 5: Preview and Publish') }}</div>
         </div>
     </x-slot>
 
@@ -32,7 +32,7 @@
                             <div class="flex items-center gap-4">
                                 <img src="{{ asset('brand/logo.png') }}" alt="{{ config('app.name', 'Minhaj') }}" class="h-14 w-auto">
                                 <div>
-                                    <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Instructor printable preview') }}</p>
+                                    <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Student exam preview') }}</p>
                                     <h3 class="mt-1 text-2xl font-semibold text-slate-950">{{ $exam->title }}</h3>
                                     <p class="mt-1 text-sm text-slate-600">
                                         {{ $exam->course?->code ?? __('No course') }}
@@ -153,9 +153,9 @@
                                 class="inline-flex items-center justify-center rounded-xl bg-orange-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700">
                                 {{ __('Print / save as PDF') }}
                             </button>
-                            <a href="{{ route('instructor.exams.edit', $exam) }}#exam-format"
+                            <a href="{{ route('instructor.exams.edit', $exam) }}#advanced-options"
                                 class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
-                                {{ __('Change template') }}
+                                {{ __('Advanced Options') }}
                             </a>
                             <a href="{{ route('instructor.exams.questions.order.index', $exam) }}"
                                 class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50">

@@ -54,6 +54,7 @@ class StudentExamController extends Controller
     public function start(Request $request, ExamAssignment $assignment, ExamSessionManager $sessionManager): RedirectResponse
     {
         $student = $this->studentProfile($request);
+        $this->authorizeAssignment($assignment, $student);
         $session = $sessionManager->start($assignment, $student);
 
         return redirect()
@@ -159,12 +160,15 @@ class StudentExamController extends Controller
 
         $responseManager->saveDrafts($session->load('assignment.exam.questions'), $this->validatedAnswers($request));
         $timedOut = $session->expires_at && now()->gt($session->expires_at);
-        $sessionManager->submit($session, timedOut: $timedOut);
+        $submitted = $sessionManager->submit($session, timedOut: $timedOut);
+        $message = (bool) (($submitted->metadata ?? [])['manual_grading_pending'] ?? false)
+            ? 'Your exam was submitted successfully. Some answers need teacher review before final result is available.'
+            : 'Exam submitted.';
 
         return $this->noStore(
             redirect()
                 ->route('student.exams.index')
-                ->with('status', 'Exam submitted.')
+                ->with('status', $message)
         );
     }
 
@@ -199,6 +203,25 @@ class StudentExamController extends Controller
     private function authorizeSession(ExamSession $session, StudentProfile $student): void
     {
         abort_unless((int) $session->student_profile_id === (int) $student->id, 403);
+    }
+
+    private function authorizeAssignment(ExamAssignment $assignment, StudentProfile $student): void
+    {
+        $assignment->loadMissing('exam');
+
+        $allowed = $assignment->student_profile_id === null
+            || (int) $assignment->student_profile_id === (int) $student->id;
+
+        $enrolled = $student->courses()
+            ->whereKey($assignment->course_id)
+            ->wherePivot('enrollment_status', 'enrolled')
+            ->exists();
+
+        if ($assignment->exam?->status !== InstructorExam::STATUS_PUBLISHED || ! $allowed || ! $enrolled) {
+            throw ValidationException::withMessages([
+                'exam' => 'You do not have permission to access this exam.',
+            ]);
+        }
     }
 
     private function authorizePublishedExam(ExamSession $session): void

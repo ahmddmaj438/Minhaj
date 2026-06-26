@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         app(AiConfigurationManager::class)->apply();
 
         Gate::before(function (User $user, string $ability): ?bool {
-            if (app()->environment('testing')) {
+            if (app()->environment('testing') && (bool) config('auth.testing_bypass_permissions', true)) {
                 return true;
             }
 

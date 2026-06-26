@@ -19,6 +19,13 @@ final class AiProviderCatalog
                 'default_base_url' => 'https://generativelanguage.googleapis.com',
                 'help' => 'Use a Google AI Studio or Google Cloud Gemini API key.',
             ],
+            'pollinations' => [
+                'label' => 'Pollinations Public',
+                'default_model' => 'openai',
+                'default_base_url' => 'https://text.pollinations.ai',
+                'help' => 'Free public testing option. It does not require a stored key, but availability can vary during busy periods.',
+                'api_key_optional' => true,
+            ],
             'claude' => [
                 'label' => 'Claude',
                 'default_model' => 'claude-sonnet-4-20250514',
@@ -42,5 +49,10 @@ final class AiProviderCatalog
     public static function find(string $provider): array
     {
         return self::all()[$provider] ?? self::all()['custom'];
+    }
+
+    public static function requiresApiKey(string $provider): bool
+    {
+        return ! (bool) (self::find($provider)['api_key_optional'] ?? false);
     }
 }

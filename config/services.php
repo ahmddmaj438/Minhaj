@@ -63,10 +63,10 @@ return [
     ],
 
     'ai' => [
-        'active_provider' => null,
-        'api_key' => null,
-        'model' => null,
-        'base_url' => null,
+        'active_provider' => env('AI_PROVIDER', 'pollinations'),
+        'api_key' => env('AI_API_KEY'),
+        'model' => env('AI_MODEL', 'openai'),
+        'base_url' => env('AI_API_URL', 'https://text.pollinations.ai'),
     ],
 
 ];

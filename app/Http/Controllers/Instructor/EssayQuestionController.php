@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Instructor\UpdateEssayQuestionRequest;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
+use App\Services\Exams\ReviewGuidanceGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -48,6 +49,13 @@ class EssayQuestionController extends Controller
                 'builder_phase' => 'Phase 7',
                 'expected_answer' => $validated['expected_answer'] ?? null,
                 'rubric' => $validated['rubric'] ?? null,
+                'key_points' => $validated['key_points'] ?? null,
+                'mark_distribution' => $validated['mark_distribution'] ?? null,
+                'common_mistakes' => $validated['common_mistakes'] ?? null,
+                'evaluation_instructions' => $validated['evaluation_instructions'] ?? null,
+                'review_guidance_status' => 'approved',
+                'review_guidance_approved_at' => now()->toISOString(),
+                'review_guidance_approved_by' => $request->user()?->id,
                 'min_words' => $validated['min_words'] ?? null,
                 'max_words' => $validated['max_words'] ?? null,
             ],
@@ -78,6 +86,31 @@ class EssayQuestionController extends Controller
         return redirect()
             ->route('instructor.exams.questions.essay.edit', [$exam, $question])
             ->with('status', 'Essay question saved. You can review it here before moving to the next builder.');
+    }
+
+    public function generateGuidance(
+        \Illuminate\Http\Request $request,
+        InstructorExam $exam,
+        InstructorExamQuestion $question,
+        ReviewGuidanceGenerator $generator
+    ): RedirectResponse {
+        abort_unless($request->user()?->can('button.instructor.exams.questions.essay.save'), 403);
+        abort_unless($request->user()?->can('db.instructor_exam_questions.update'), 403);
+        $this->authorizeEssayQuestion($exam, $question);
+
+        $settings = $question->settings ?? [];
+        $draft = $generator->draft($question);
+
+        $question->update([
+            'settings' => [
+                ...$settings,
+                ...$draft,
+            ],
+        ]);
+
+        return redirect()
+            ->route('instructor.exams.questions.essay.edit', [$exam, $question])
+            ->with('status', 'Review guidance draft generated. Please review and save the question before using it for grading.');
     }
 
     private function authorizeEssayQuestion(InstructorExam $exam, InstructorExamQuestion $question): void

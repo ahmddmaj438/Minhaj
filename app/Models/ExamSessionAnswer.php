@@ -3,11 +3,14 @@
 namespace App\Models;
 
 use App\Models\Exam\InstructorExamQuestion;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamSessionAnswer extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'exam_session_id',
         'instructor_exam_question_id',

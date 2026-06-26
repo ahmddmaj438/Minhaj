@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\ExamSession;
 use App\Models\ExamSessionAnswer;
+use App\Services\Access\LearningAccess;
 use App\Services\Exams\ExamScoringManager;
 use App\Services\Exams\Grading\Assistants\WrittenAnswerGradingAssistant;
 use App\Services\Exams\Grading\Assistants\WrittenAnswerSupport;
@@ -15,16 +16,14 @@ use Illuminate\View\View;
 
 class ManualGradingController extends Controller
 {
-    public function index(Request $request, ExamScoringManager $scoringManager): View
+    public function index(Request $request, ExamScoringManager $scoringManager, LearningAccess $access): View
     {
+        $examIds = $access->examQuery($request->user())->pluck('id');
+
         $sessions = ExamSession::query()
             ->with(['assignment.exam.course', 'student.user', 'answers.question'])
             ->where('status', ExamSession::STATUS_SUBMITTED)
-            ->whereHas('assignment.exam', function ($query) use ($request): void {
-                if (! $request->user()?->isSuperAdmin()) {
-                    $query->where('instructor_id', $request->user()?->id);
-                }
-            })
+            ->whereHas('assignment', fn ($query) => $query->whereIn('instructor_exam_id', $examIds))
             ->latest('submitted_at')
             ->get();
 
@@ -41,10 +40,11 @@ class ManualGradingController extends Controller
         Request $request,
         ExamSession $session,
         ExamScoringManager $scoringManager,
-        WrittenAnswerSupport $writtenAnswerSupport
+        WrittenAnswerSupport $writtenAnswerSupport,
+        LearningAccess $access
     ): View {
         $session->load(['assignment.exam.course', 'student.user', 'answers.question']);
-        $this->authorizeSession($request, $session);
+        $this->authorizeSession($request, $session, $access);
 
         return view('instructor.grading.show', [
             'session' => $session,
@@ -60,11 +60,12 @@ class ManualGradingController extends Controller
         Request $request,
         ExamSession $session,
         ExamSessionAnswer $answer,
-        ExamScoringManager $scoringManager
+        ExamScoringManager $scoringManager,
+        LearningAccess $access
     ): RedirectResponse {
         $session->load(['assignment.exam.course', 'student.user']);
         $answer->load('question');
-        $this->authorizeSession($request, $session);
+        $this->authorizeSession($request, $session, $access);
         abort_unless($request->user()?->can('button.instructor.grading.answers.save'), 403);
         abort_unless($request->user()?->can('db.exam_session_answers.update'), 403);
         abort_unless($request->user()?->can('db.exam_sessions.update'), 403);
@@ -96,11 +97,12 @@ class ManualGradingController extends Controller
         Request $request,
         ExamSession $session,
         ExamSessionAnswer $answer,
-        WrittenAnswerGradingAssistant $assistant
+        WrittenAnswerGradingAssistant $assistant,
+        LearningAccess $access
     ): RedirectResponse|JsonResponse {
         $session->load(['assignment.exam.course', 'student.user']);
         $answer->load('question');
-        $this->authorizeSession($request, $session);
+        $this->authorizeSession($request, $session, $access);
         abort_unless($request->user()?->can('button.instructor.grading.answers.ai_assist'), 403);
         abort_unless($request->user()?->can('db.exam_session_answers.update'), 403);
         abort_unless((int) $answer->exam_session_id === (int) $session->id, 404);
@@ -133,20 +135,22 @@ class ManualGradingController extends Controller
         Request $request,
         ExamSession $session,
         ExamSessionAnswer $answer,
-        WrittenAnswerGradingAssistant $assistant
+        WrittenAnswerGradingAssistant $assistant,
+        LearningAccess $access
     ): RedirectResponse|JsonResponse {
-        return $this->assistAnswer($request, $session, $answer, $assistant);
+        return $this->assistAnswer($request, $session, $answer, $assistant, $access);
     }
 
     public function storeClientAssistSuggestion(
         Request $request,
         ExamSession $session,
         ExamSessionAnswer $answer,
-        WrittenAnswerGradingAssistant $assistant
+        WrittenAnswerGradingAssistant $assistant,
+        LearningAccess $access
     ): JsonResponse {
         $session->load(['assignment.exam.course', 'student.user']);
         $answer->load('question');
-        $this->authorizeSession($request, $session);
+        $this->authorizeSession($request, $session, $access);
         abort_unless($request->user()?->can('button.instructor.grading.answers.ai_assist'), 403);
         abort_unless($request->user()?->can('db.exam_session_answers.update'), 403);
         abort_unless((int) $answer->exam_session_id === (int) $session->id, 404);
@@ -178,8 +182,8 @@ class ManualGradingController extends Controller
             'strengths' => array_values(array_filter($data['strengths'] ?? [])),
             'improvements' => array_values(array_filter($data['improvements'] ?? [])),
             'provider' => 'puter_browser:gpt-5-nano',
-            'rationale' => trim((string) ($data['rationale'] ?? 'Generated by Puter AI browser fallback after backend providers were unavailable.')),
-            'provider_note' => 'Generated by Puter AI from the instructor browser because Gemini/Groq keys were not configured and the public Pollinations endpoint was unavailable.',
+            'rationale' => trim((string) ($data['rationale'] ?? 'Generated from the question, rubric, expected answer, and student answer.')),
+            'provider_note' => 'Generated by the browser AI fallback. Please review the suggestion before saving the final mark.',
             'provider_error' => null,
             'rubric_assessment' => collect($data['rubric_assessment'] ?? [])
                 ->filter(fn ($item): bool => is_array($item))
@@ -208,12 +212,8 @@ class ManualGradingController extends Controller
         ]);
     }
 
-    private function authorizeSession(Request $request, ExamSession $session): void
+    private function authorizeSession(Request $request, ExamSession $session, LearningAccess $access): void
     {
-        abort_unless(
-            $request->user()?->isSuperAdmin()
-                || (int) $session->assignment->exam->instructor_id === (int) $request->user()?->id,
-            403
-        );
+        abort_unless($access->canGradeSession($request->user(), $session), 403, 'You do not have permission to access this exam.');
     }
 }

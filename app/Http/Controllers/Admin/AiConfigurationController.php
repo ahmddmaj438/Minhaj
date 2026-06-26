@@ -10,6 +10,7 @@ use App\Services\AI\AiConnectionTester;
 use App\Support\AI\AiProviderCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use RuntimeException;
@@ -23,7 +24,9 @@ class AiConfigurationController extends Controller
 
         $configurations = AiConfiguration::query()->get()->keyBy('provider');
         $defaultProvider = $configurations
-            ->firstWhere('status', AiConfiguration::STATUS_ACTIVE)?->provider ?? 'openai';
+            ->firstWhere('status', AiConfiguration::STATUS_ACTIVE)?->provider
+            ?? config('services.ai.active_provider')
+            ?? 'pollinations';
         $selectedProvider = request()->string('provider')->toString();
 
         if (! in_array($selectedProvider, AiProviderCatalog::keys(), true)) {
@@ -83,16 +86,16 @@ class AiConfigurationController extends Controller
         $stored = AiConfiguration::query()->where('provider', $validated['provider'])->first();
         $apiKey = $validated['api_key'] ?: $stored?->api_key;
 
-        if (blank($apiKey)) {
+        if (blank($apiKey) && AiProviderCatalog::requiresApiKey($validated['provider'])) {
             throw ValidationException::withMessages([
-                'api_key' => 'Enter an API key before testing this provider.',
+                'api_key' => 'API key is missing.',
             ]);
         }
 
         try {
             $message = $tester->test(
                 $validated['provider'],
-                $apiKey,
+                (string) $apiKey,
                 $validated['base_url'] ?: null,
                 $validated['model_name'],
             );
@@ -100,9 +103,15 @@ class AiConfigurationController extends Controller
             throw ValidationException::withMessages([
                 'connection' => $exception->getMessage(),
             ]);
-        } catch (Throwable) {
+        } catch (Throwable $exception) {
+            Log::warning('AI configuration test failed unexpectedly.', [
+                'provider' => $validated['provider'],
+                'model' => $validated['model_name'],
+                'error' => $exception->getMessage(),
+            ]);
+
             throw ValidationException::withMessages([
-                'connection' => 'The connection could not be completed. Check the provider URL and your network connection.',
+                'connection' => 'AI test failed. Please review the settings.',
             ]);
         }
 

@@ -3,12 +3,16 @@
 namespace App\Models\Exam;
 
 use App\Models\ExamSessionAnswer;
+use Database\Factories\InstructorExamQuestionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InstructorExamQuestion extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'instructor_exam_id',
         'type',
@@ -45,5 +49,10 @@ class InstructorExamQuestion extends Model
     public function sessionAnswers(): HasMany
     {
         return $this->hasMany(ExamSessionAnswer::class);
+    }
+
+    protected static function newFactory(): InstructorExamQuestionFactory
+    {
+        return InstructorExamQuestionFactory::new();
     }
 }

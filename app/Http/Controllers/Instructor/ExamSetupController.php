@@ -8,26 +8,27 @@ use App\Http\Requests\Instructor\UpdateInstructorExamRequest;
 use App\Models\Course;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
+use App\Services\Access\LearningAccess;
 use App\Support\Exams\ExamDisplayFormatCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ExamSetupController extends Controller
 {
-    public function create(): View
+    public function create(LearningAccess $access): View
     {
         $user = request()->user();
 
-        $exams = InstructorExam::query()
+        $exams = $access->examQuery($user)
             ->with('course')
             ->withCount('questions')
-            ->when(! $user?->isSuperAdmin(), fn ($query) => $query->where('instructor_id', $user?->id))
             ->latest('updated_at')
             ->get();
 
         return view('instructor.exams.create', [
-            'courses' => Course::query()
+            'courses' => $access->courseQuery($user)
                 ->where('is_active', true)
                 ->orderBy('code')
                 ->orderBy('name')
@@ -37,15 +38,16 @@ class ExamSetupController extends Controller
         ]);
     }
 
-    public function edit(InstructorExam $exam): View
+    public function edit(InstructorExam $exam, LearningAccess $access): View
     {
-        $this->authorizeInstructorExam($exam);
+        $this->authorizeInstructorExam($exam, $access);
 
         $questions = $exam->questions()->get();
+        $user = request()->user();
 
         return view('instructor.exams.edit', [
-            'exam' => $exam->load('course'),
-            'courses' => Course::query()
+            'exam' => $exam->load('course.majors'),
+            'courses' => $access->courseQuery($user)
                 ->where('is_active', true)
                 ->orderBy('code')
                 ->orderBy('name')
@@ -57,12 +59,14 @@ class ExamSetupController extends Controller
         ]);
     }
 
-    public function store(StoreInstructorExamRequest $request): RedirectResponse
+    public function store(StoreInstructorExamRequest $request, LearningAccess $access): RedirectResponse
     {
         abort_unless($request->user()?->can('button.instructor.exams.store.save_draft'), 403);
         abort_unless($request->user()?->can('db.instructor_exams.insert'), 403);
 
         $validated = $request->validated();
+        abort_unless($access->canAccessCourse($request->user(), (int) $validated['course_id']), 403, 'This course is not assigned to you.');
+
         $intent = $validated['intent'];
         unset($validated['intent']);
 
@@ -88,22 +92,32 @@ class ExamSetupController extends Controller
             ->with('status', $message);
     }
 
-    public function update(UpdateInstructorExamRequest $request, InstructorExam $exam): RedirectResponse
+    public function update(UpdateInstructorExamRequest $request, InstructorExam $exam, LearningAccess $access): RedirectResponse
     {
         abort_unless($request->user()?->can('db.instructor_exams.update'), 403);
-        $this->authorizeInstructorExam($exam);
+        $this->authorizeInstructorExam($exam, $access);
+        $validated = $request->validated();
+        $keepsOwnedCourse = (int) $exam->instructor_id === (int) $request->user()->id
+            && (int) $exam->course_id === (int) $validated['course_id'];
+        abort_unless($keepsOwnedCourse || $access->canAccessCourse($request->user(), (int) $validated['course_id']), 403, 'This course is not assigned to you.');
 
-        $exam->update($request->validated());
+        $exam->update($validated);
 
         return redirect()
             ->route('instructor.exams.edit', $exam)
             ->with('status', 'Exam updated.');
     }
 
-    public function destroy(Request $request, InstructorExam $exam): RedirectResponse
+    public function destroy(Request $request, InstructorExam $exam, LearningAccess $access): RedirectResponse
     {
         abort_unless($request->user()?->can('db.instructor_exams.delete'), 403);
-        $this->authorizeInstructorExam($exam);
+        $this->authorizeInstructorExam($exam, $access);
+
+        if ($exam->status === InstructorExam::STATUS_PUBLISHED || $exam->assignments()->exists() || $exam->sessions()->exists()) {
+            throw ValidationException::withMessages([
+                'exam' => __('This exam already has academic activity. Return it to draft or close its assignments instead of removing it.'),
+            ]);
+        }
 
         $exam->delete();
 
@@ -112,9 +126,9 @@ class ExamSetupController extends Controller
             ->with('status', 'Exam deleted.');
     }
 
-    private function authorizeInstructorExam(InstructorExam $exam): void
+    private function authorizeInstructorExam(InstructorExam $exam, LearningAccess $access): void
     {
-        abort_unless(auth()->id() === $exam->instructor_id || auth()->user()?->isSuperAdmin(), 403);
+        abort_unless($access->canAccessExam(auth()->user(), $exam), 403, 'You do not have permission to access this exam.');
     }
 
     private function questionEditRoutes($questions): array

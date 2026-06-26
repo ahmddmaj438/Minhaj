@@ -7,7 +7,7 @@
                     {{ $requiresCorrection ? 'True / False + Correction' : 'True / False Question' }}
                 </h2>
             </div>
-            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Questions</div>
         </div>
     </x-slot>
 
@@ -93,7 +93,7 @@
                             <div>
                                 <label for="statement" class="block text-sm font-medium text-slate-800">Question statement</label>
                                 <textarea id="statement" name="statement" rows="5" required
-                                    placeholder="Example: A primary key can contain duplicate values in a relational database table."
+                                    placeholder="Example: A student number can be shared by more than one student."
                                     class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('statement', $storedPrompt['statement'] ?? '') }}</textarea>
                                 <x-input-error :messages="$errors->get('statement')" class="mt-2" />
                             </div>
@@ -176,7 +176,7 @@
 
                                 <label for="corrected_statement" class="mt-5 block text-sm font-semibold text-slate-900">Full corrected statement</label>
                                 <textarea id="corrected_statement" name="corrected_statement" rows="4"
-                                    placeholder="Example: A primary key must contain unique values in a relational database table."
+                                    placeholder="Example: Each student number must belong to one student only."
                                     class="mt-2 block w-full rounded-md border-orange-200 bg-white shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('corrected_statement', $storedSettings['corrected_statement'] ?? '') }}</textarea>
                                 <p class="mt-2 text-sm text-orange-800">This optional full sentence helps preview and future correction review stay clear.</p>
                                 <x-input-error :messages="$errors->get('corrected_statement')" class="mt-2" />

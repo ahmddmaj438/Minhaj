@@ -60,7 +60,7 @@
                             {{ __('Monitor exams, users, questions, answers, and outcomes from one place.') }}
                         </h3>
                         <p class="mt-4 max-w-2xl text-sm leading-6 text-slate-600">
-                            {{ __('Track the learning workflow across local instructor exams and TCExam data, with quick signals for content growth, completion activity, and result quality.') }}
+                            {{ __('Track the learning workflow across prepared and imported exam data, with quick signals for content growth, completion activity, and result quality.') }}
                         </p>
                     </div>
 
@@ -137,7 +137,7 @@
                         @endcan
                         @can('screen.data.tables.index.view')
                             <a href="{{ route('data.tables.index') }}" class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 hover:border-orange-300 hover:bg-orange-50">
-                                {{ __('Browse data tables') }}
+                                {{ __('Browse system data') }}
                             </a>
                         @endcan
                         @can('screen.users.index.view')
@@ -176,7 +176,7 @@
                     <div class="flex items-center justify-between gap-4">
                         <div>
                             <h3 class="text-lg font-semibold text-slate-950">{{ __('Completions This Week') }}</h3>
-                            <p class="mt-1 text-sm text-slate-500">{{ __('Daily completed TCExam snapshots') }}</p>
+                            <p class="mt-1 text-sm text-slate-500">{{ __('Daily completed imported exam results') }}</p>
                         </div>
                         <span class="rounded-md bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">{{ __('7 days') }}</span>
                     </div>
@@ -198,7 +198,7 @@
 
                 <article data-reveal class="dashboard-reveal dashboard-card-motion rounded-lg border border-slate-200 bg-white p-6 shadow-sm" style="--reveal-delay: 60ms;">
                     <h3 class="text-lg font-semibold text-slate-950">{{ __('Exam Mix') }}</h3>
-                    <p class="mt-1 text-sm text-slate-500">{{ __('Draft, published, and TCExam inventory') }}</p>
+                    <p class="mt-1 text-sm text-slate-500">{{ __('Draft, published, and imported exam inventory') }}</p>
 
                     <div class="mt-7 flex flex-col items-center gap-6 sm:flex-row lg:flex-col xl:flex-row">
                         <div class="dashboard-donut h-40 w-40 rounded-full p-5" style="background: {{ $statusDonut }};">

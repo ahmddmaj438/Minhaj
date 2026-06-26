@@ -13,10 +13,10 @@
 
     <button type="submit" name="locale" value="en"
         class="{{ $buttonBase }} rounded-xl font-semibold transition {{ $locale === 'en' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600 hover:bg-orange-50 hover:text-brand-ink' }}">
-        EN
+        {{ __('English') }}
     </button>
     <button type="submit" name="locale" value="ar"
         class="{{ $buttonBase }} rounded-xl font-semibold transition {{ $locale === 'ar' ? 'bg-brand-navy text-white shadow-sm' : 'text-slate-600 hover:bg-orange-50 hover:text-brand-ink' }}">
-        AR
+        {{ __('Arabic') }}
     </button>
 </form>

@@ -7,6 +7,7 @@ use App\Models\ExamAssignment;
 use App\Models\ExamSession;
 use App\Models\Major;
 use App\Models\StudentProfile;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -23,7 +24,27 @@ class AcademicWorkflowService
 
     public function createStudentProfile(array $data): StudentProfile
     {
-        return DB::transaction(fn (): StudentProfile => StudentProfile::create($data));
+        return DB::transaction(function () use ($data): StudentProfile {
+            $userId = $data['user_id'] ?? null;
+
+            if (! $userId) {
+                $user = User::create([
+                    'name' => $data['student_name'],
+                    'email' => $data['student_email'],
+                    'password' => $data['student_password'],
+                ]);
+
+                $userId = $user->id;
+            }
+
+            return StudentProfile::create([
+                'user_id' => $userId,
+                'major_id' => $data['major_id'] ?? null,
+                'student_number' => $data['student_number'],
+                'academic_status' => $data['academic_status'],
+                'admission_year' => $data['admission_year'] ?? null,
+            ]);
+        });
     }
 
     public function assignCourseToMajor(array $data, bool $isRequired): void
@@ -49,6 +70,21 @@ class AcademicWorkflowService
                 $data['course_id'] => [
                     'enrollment_status' => $data['enrollment_status'],
                     'enrolled_at' => $data['enrolled_at'] ?? now(),
+                ],
+            ]);
+        });
+    }
+
+    public function assignTeacherToCourse(array $data, int $assignedBy): void
+    {
+        DB::transaction(function () use ($data, $assignedBy): void {
+            $course = \App\Models\Course::findOrFail($data['course_id']);
+
+            $course->teachers()->syncWithoutDetaching([
+                $data['user_id'] => [
+                    'role' => 'teacher',
+                    'assigned_by' => $assignedBy,
+                    'assigned_at' => now(),
                 ],
             ]);
         });

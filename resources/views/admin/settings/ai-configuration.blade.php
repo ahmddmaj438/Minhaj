@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">Admin Dashboard / Settings</p>
-            <h2 class="mt-1 text-xl font-semibold leading-tight text-slate-950">AI Configuration</h2>
+            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-orange-700">Admin Settings</p>
+            <h2 class="mt-1 text-xl font-semibold leading-tight text-slate-950">AI Configuration Test</h2>
         </div>
     </x-slot>
 
@@ -36,7 +36,7 @@
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-orange-700">Provider</p>
                     <h3 class="mt-1 text-lg font-semibold text-slate-950">Choose the AI service used by MINHAJ</h3>
                     <p class="mt-2 text-sm leading-6 text-slate-600">
-                        Credentials are encrypted before storage. Only one provider can be active at a time.
+                        Credentials are encrypted before storage. Pollinations Public is available for quick free testing without a bundled key; Gemini is also free-tier-friendly when you add your own key.
                     </p>
                 </div>
 
@@ -76,7 +76,7 @@
                             <p class="mt-1 text-sm text-slate-600">{{ $selected['help'] }}</p>
                         </div>
                         <span class="w-fit rounded-full px-3 py-1 text-xs font-semibold {{ $configuration?->api_key ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-800' }}">
-                            {{ $configuration?->api_key ? 'API key stored securely' : 'API key required' }}
+                            {{ $configuration?->api_key ? 'API key stored securely' : (($selected['api_key_optional'] ?? false) ? 'API key optional' : 'API key required') }}
                         </span>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                     @can('button.admin.settings.ai-configuration.test')
                         <button type="submit" formaction="{{ route('admin.settings.ai-configuration.test') }}"
                             class="inline-flex items-center justify-center rounded-md border border-orange-300 bg-white px-5 py-2.5 text-sm font-semibold text-orange-700 shadow-sm hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                            Test Connection
+                            Test AI Connection
                         </button>
                     @endcan
                     @can('button.admin.settings.ai-configuration.save')

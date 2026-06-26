@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-slate-900 leading-tight">Create User</h2>
+        <h2 class="font-semibold text-xl text-slate-900 leading-tight">{{ __('Add User Account') }}</h2>
     </x-slot>
 
     <div class="py-8">
@@ -25,7 +25,7 @@
                         <x-text-input id="password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" required />
                     </div>
                     <x-input-error :messages="$errors->all()" class="mt-2" />
-                    <x-primary-button>Create User</x-primary-button>
+                    <x-primary-button>{{ __('Add user account') }}</x-primary-button>
                 </form>
             </div>
         </div>

@@ -1,8 +1,9 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex flex-col gap-1">
-            <p class="text-sm font-semibold text-orange-600">{{ __('Data Management') }}</p>
-            <h2 class="text-xl font-semibold leading-tight text-slate-900">{{ $mode === 'create' ? __('Create') : __('Edit') }} {{ $tableLabel }}</h2>
+            <p class="text-sm font-semibold text-orange-600">{{ __('System Data') }}</p>
+            <h2 class="text-xl font-semibold leading-tight text-slate-900">{{ $mode === 'create' ? __('Add new information for') : __('Edit information for') }} {{ $tableLabel }}</h2>
+            <p class="mt-1 text-sm text-slate-600">{{ $tableDescription }}</p>
         </div>
     </x-slot>
 
@@ -10,7 +11,7 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white/95 shadow-sm rounded-xl border border-orange-100 p-6">
                 <div class="mb-6 rounded-xl border border-orange-100 bg-orange-50/70 px-4 py-3 text-sm text-slate-700">
-                    {{ __('Required fields are marked with an asterisk. Review values carefully before saving because this updates the imported data table directly.') }}
+                    {{ __('Required fields are marked with an asterisk. Review values carefully before saving because this updates important system information.') }}
                 </div>
                 @if ($errors->any())
                     <div role="alert" class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
@@ -87,7 +88,7 @@
                     </div>
 
                     <div class="flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center">
-                        <button class="inline-flex min-h-11 items-center justify-center rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-700" type="submit">{{ $mode === 'create' ? __('Create Record') : __('Update Record') }}</button>
+                        <button class="inline-flex min-h-11 items-center justify-center rounded-xl bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-orange-700" type="submit">{{ $mode === 'create' ? __('Add new information') : __('Save changes') }}</button>
                         <a href="{{ route('data.table.index', ['table' => $table]) }}" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-orange-200 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-orange-50">{{ __('Cancel') }}</a>
                     </div>
                 </form>

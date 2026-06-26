@@ -14,7 +14,7 @@
     $usesLargeAnswerArea = in_array($displayOverride, ['large_text_area', 'expanded_essay'], true);
 @endphp
 
-<article @class([
+<article data-question-card="{{ $question->id }}" @class([
     'rounded-lg border bg-white p-6 shadow-sm',
     'border-slate-200' => $displayOverride === 'standard',
     'border-orange-200 ring-1 ring-orange-100' => $displayOverride !== 'standard',
@@ -33,6 +33,7 @@
                 @if ($timing)
                     <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ $timing['label'] }}</span>
                 @endif
+                <span data-question-status="{{ $question->id }}" class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">Unanswered</span>
             </div>
             <h3 class="mt-3 text-lg font-semibold text-slate-950">{{ $questionText }}</h3>
             @if (! empty($prompt['instructions']))
@@ -58,7 +59,7 @@
                         $inputType = $allowMultiple ? 'checkbox' : 'radio';
                     @endphp
                     <label class="flex gap-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800">
-                        <input type="{{ $inputType }}" name="answers[{{ $question->id }}][selected_options][]" value="{{ $optionValue }}"
+                        <input data-answer-input="{{ $question->id }}" type="{{ $inputType }}" name="answers[{{ $question->id }}][selected_options][]" value="{{ $optionValue }}"
                             @checked(in_array($optionValue, $selectedOptions, true))
                             class="mt-1 border-slate-300 text-orange-600 focus:ring-orange-500">
                         <span>{{ $option['text'] ?? '' }}</span>
@@ -68,13 +69,13 @@
         @elseif (in_array($question->type, ['true_false', 'true_false_correct'], true))
             <div class="grid gap-3 sm:grid-cols-2">
                 <label class="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800">
-                    <input type="radio" name="answers[{{ $question->id }}][answer]" value="true"
+                    <input data-answer-input="{{ $question->id }}" type="radio" name="answers[{{ $question->id }}][answer]" value="true"
                         @checked(($saved['answer'] ?? null) === 'true')
                         class="border-slate-300 text-orange-600 focus:ring-orange-500">
                     True
                 </label>
                 <label class="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800">
-                    <input type="radio" name="answers[{{ $question->id }}][answer]" value="false"
+                    <input data-answer-input="{{ $question->id }}" type="radio" name="answers[{{ $question->id }}][answer]" value="false"
                         @checked(($saved['answer'] ?? null) === 'false')
                         class="border-slate-300 text-orange-600 focus:ring-orange-500">
                     False
@@ -83,7 +84,7 @@
             @if ($question->type === 'true_false_correct')
                 <div class="mt-4">
                     <label for="correction_{{ $question->id }}" class="block text-sm font-medium text-slate-800">Correction</label>
-                    <textarea id="correction_{{ $question->id }}" name="answers[{{ $question->id }}][correction]" rows="3"
+                    <textarea data-answer-input="{{ $question->id }}" id="correction_{{ $question->id }}" name="answers[{{ $question->id }}][correction]" rows="3"
                         class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ $saved['correction'] ?? '' }}</textarea>
                 </div>
             @endif
@@ -96,7 +97,7 @@
                         'lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-center lg:p-5' => $displayOverride === 'matching_focused',
                     ])>
                         <div class="text-sm font-semibold text-slate-900">{{ $pair['left'] ?? '' }}</div>
-                        <input name="answers[{{ $question->id }}][matches][{{ $index }}]" value="{{ $saved['matches'][$index] ?? '' }}"
+                        <input data-answer-input="{{ $question->id }}" name="answers[{{ $question->id }}][matches][{{ $index }}]" value="{{ $saved['matches'][$index] ?? '' }}"
                             placeholder="Match"
                             class="block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
@@ -109,21 +110,21 @@
                         <label for="blank_{{ $question->id }}_{{ $index }}" class="block text-sm font-medium text-slate-800">
                             {{ $blank['label'] ?? 'Blank '.($index + 1) }}
                         </label>
-                        <input id="blank_{{ $question->id }}_{{ $index }}" name="answers[{{ $question->id }}][blanks][{{ $index }}]"
+                        <input data-answer-input="{{ $question->id }}" id="blank_{{ $question->id }}_{{ $index }}" name="answers[{{ $question->id }}][blanks][{{ $index }}]"
                             value="{{ $saved['blanks'][$index] ?? '' }}"
                             class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">
                     </div>
                 @endforeach
             </div>
         @elseif ($question->type === 'essay')
-            <textarea name="answers[{{ $question->id }}][response]" rows="{{ $displayOverride === 'expanded_essay' ? 18 : ($usesLargeAnswerArea ? 12 : 8) }}"
+            <textarea data-answer-input="{{ $question->id }}" name="answers[{{ $question->id }}][response]" rows="{{ $displayOverride === 'expanded_essay' ? 18 : ($usesLargeAnswerArea ? 12 : 8) }}"
                 class="block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ $saved['response'] ?? '' }}</textarea>
         @elseif ($question->category === 'coding')
             <div class="grid gap-4">
                 @if (! empty($settings['starter_code']))
                     <pre class="overflow-x-auto whitespace-pre-wrap rounded-lg bg-slate-950 p-4 font-mono text-sm leading-6 text-slate-100">{{ $settings['starter_code'] }}</pre>
                 @endif
-                <textarea name="answers[{{ $question->id }}][response]" rows="{{ $usesLargeAnswerArea ? 16 : 10 }}"
+                <textarea data-answer-input="{{ $question->id }}" name="answers[{{ $question->id }}][response]" rows="{{ $usesLargeAnswerArea ? 16 : 10 }}"
                     class="block w-full rounded-md border-slate-300 font-mono text-sm shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ $saved['response'] ?? $settings['starter_code'] ?? '' }}</textarea>
             </div>
         @elseif ($question->type === 'packet_tracer')
@@ -131,11 +132,11 @@
                 @if (! empty($settings['expected_tasks']))
                     <div class="rounded-md bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700">{{ $settings['expected_tasks'] }}</div>
                 @endif
-                <textarea name="answers[{{ $question->id }}][response]" rows="{{ $usesLargeAnswerArea ? 12 : 6 }}"
+                <textarea data-answer-input="{{ $question->id }}" name="answers[{{ $question->id }}][response]" rows="{{ $usesLargeAnswerArea ? 12 : 6 }}"
                     class="block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ $saved['response'] ?? '' }}</textarea>
             </div>
         @else
-            <textarea name="answers[{{ $question->id }}][response]" rows="{{ $usesLargeAnswerArea ? 12 : 5 }}"
+            <textarea data-answer-input="{{ $question->id }}" name="answers[{{ $question->id }}][response]" rows="{{ $usesLargeAnswerArea ? 12 : 5 }}"
                 class="block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ $saved['response'] ?? '' }}</textarea>
         @endif
     </div>

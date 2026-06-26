@@ -21,15 +21,15 @@ class LocalEssayGradingProvider implements EssayGradingProvider
             suggestedScore: null,
             maxScore: $maxScore,
             confidence: 0.0,
-            feedback: 'No AI evaluation was generated because no real AI provider completed the request.',
+            feedback: 'No AI evaluation was generated. Please review this answer manually or try again after AI assistance is configured.',
             strengths: [],
             improvements: [
-                'Configure a real AI provider key, such as GOOGLE_GEMINI_API_KEY, to send the JSON evaluation package for content-based grading.',
-                'The assistant no longer creates local scores from answer length.',
+                'Check the AI assistance settings before generating another suggestion.',
+                'Use the question rubric and student answer evidence to enter the final mark.',
             ],
             provider: 'ai_provider_unavailable',
-            rationale: 'No content-based grade was calculated locally. This assistant requires a real AI provider response because the score must be based on the structured JSON evaluation package, rubric, expected answer, and student answer evidence.',
-            providerNote: 'No AI provider is configured. Add GOOGLE_GEMINI_API_KEY to send the grading JSON to Google Gemini.',
+            rationale: 'No content-based score was calculated because the AI service did not complete the evaluation.',
+            providerNote: 'The AI service is not ready yet. Please check the AI assistance settings.',
         );
     }
 }

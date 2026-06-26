@@ -51,6 +51,10 @@ class UpdateMcqQuestionRequest extends FormRequest
                     $validator->errors()->add('options', 'Add at least two answer options.');
                 }
 
+                if ($options->count() !== $options->pluck('text')->map(fn (string $text): string => mb_strtolower($text))->unique()->count()) {
+                    $validator->errors()->add('options', 'Answer options cannot be duplicated.');
+                }
+
                 $validOptionIndexes = $options->pluck('index')->map(fn ($index) => (string) $index)->all();
                 $correctIndexes = collect($this->input('correct_options', []))
                     ->map(fn ($index) => (string) $index)

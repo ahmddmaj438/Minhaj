@@ -50,6 +50,15 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        if (! Auth::user()?->is_active) {
+            Auth::guard('web')->logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => __('This account is disabled. Please contact an administrator.'),
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

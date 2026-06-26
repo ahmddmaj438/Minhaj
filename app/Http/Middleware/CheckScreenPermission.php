@@ -40,7 +40,7 @@ class CheckScreenPermission
         $allowed = $user->can('screen.' . $name . '.view');
 
         if (! $allowed) {
-            abort(403, 'You are not allowed to access this screen.');
+            abort(403, 'You do not have permission to access this page.');
         }
 
         return $next($request);

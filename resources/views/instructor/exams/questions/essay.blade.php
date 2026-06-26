@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Essay / Short Answer Question</h2>
             </div>
-            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Questions</div>
         </div>
     </x-slot>
 
@@ -73,10 +73,19 @@
 
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="border-b border-slate-100 pb-5">
-                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Review guidance</p>
-                            <h3 class="mt-1 text-lg font-semibold text-slate-950">Add model answer and rubric notes</h3>
+                            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Review Guidance</p>
+                                    <h3 class="mt-1 text-lg font-semibold text-slate-950">Teacher-approved evaluation criteria</h3>
+                                </div>
+                                <button type="submit"
+                                    form="generate-review-guidance-{{ $question->id }}"
+                                    class="inline-flex items-center justify-center rounded-md border border-violet-300 bg-white px-4 py-2 text-sm font-semibold text-violet-700 shadow-sm hover:bg-violet-50">
+                                    Generate Review Guidance
+                                </button>
+                            </div>
                             <p class="mt-2 text-sm leading-6 text-slate-600">
-                                These fields guide future manual, AI, or rubric-based review. They do not grade submissions yet.
+                                Generate a draft if helpful, then edit and save it. AI grading will use only the teacher-approved guidance after you save the question.
                             </p>
                         </div>
 
@@ -90,11 +99,43 @@
                             </div>
 
                             <div>
+                                <label for="key_points" class="block text-sm font-medium text-slate-800">Key points expected</label>
+                                <textarea id="key_points" name="key_points" rows="4"
+                                    placeholder="Example: Defines primary key; defines foreign key; explains relationship; gives a correct example."
+                                    class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('key_points', $storedSettings['key_points'] ?? '') }}</textarea>
+                                <x-input-error :messages="$errors->get('key_points')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <label for="mark_distribution" class="block text-sm font-medium text-slate-800">Suggested mark distribution</label>
+                                <textarea id="mark_distribution" name="mark_distribution" rows="3"
+                                    placeholder="Example: 2 marks definitions, 2 marks explanation, 1 mark example."
+                                    class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('mark_distribution', $storedSettings['mark_distribution'] ?? '') }}</textarea>
+                                <x-input-error :messages="$errors->get('mark_distribution')" class="mt-2" />
+                            </div>
+
+                            <div>
                                 <label for="rubric" class="block text-sm font-medium text-slate-800">Rubric / marking notes</label>
                                 <textarea id="rubric" name="rubric" rows="5"
                                     placeholder="Example: 2 marks for defining primary key, 2 marks for defining foreign key, 1 mark for examples."
                                     class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('rubric', $storedSettings['rubric'] ?? '') }}</textarea>
                                 <x-input-error :messages="$errors->get('rubric')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <label for="common_mistakes" class="block text-sm font-medium text-slate-800">Common mistakes to watch for</label>
+                                <textarea id="common_mistakes" name="common_mistakes" rows="3"
+                                    placeholder="Example: Confuses primary key with a normal index; misses examples; describes unrelated database concepts."
+                                    class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('common_mistakes', $storedSettings['common_mistakes'] ?? '') }}</textarea>
+                                <x-input-error :messages="$errors->get('common_mistakes')" class="mt-2" />
+                            </div>
+
+                            <div>
+                                <label for="evaluation_instructions" class="block text-sm font-medium text-slate-800">Evaluation instructions for teacher and AI assist</label>
+                                <textarea id="evaluation_instructions" name="evaluation_instructions" rows="3"
+                                    placeholder="Example: Award marks for correct concepts and evidence. Do not award marks for answer length alone."
+                                    class="mt-2 block w-full rounded-md border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500">{{ old('evaluation_instructions', $storedSettings['evaluation_instructions'] ?? '') }}</textarea>
+                                <x-input-error :messages="$errors->get('evaluation_instructions')" class="mt-2" />
                             </div>
                         </div>
                     </section>
@@ -181,6 +222,10 @@
                     </section>
                 </form>
 
+                <form id="generate-review-guidance-{{ $question->id }}" method="POST" action="{{ route('instructor.exams.questions.essay.guidance', [$exam, $question]) }}" class="hidden">
+                    @csrf
+                </form>
+
                 <aside class="space-y-6">
                     <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 class="text-base font-semibold text-slate-950">Exam context</h3>
@@ -203,8 +248,8 @@
                     <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                         <h3 class="text-base font-semibold text-slate-950">Essay structure</h3>
                         <div class="mt-4 space-y-3 text-sm text-slate-600">
-                            <p>The model answer and rubric are stored for review and future AI/manual grading support.</p>
-                            <p>No grading or correction is performed in this phase.</p>
+                            <p>Review Guidance is a draft until you save the question. Saving confirms the model answer, key points, rubric, and evaluation notes.</p>
+                            <p>The final mark always remains under teacher control during grading.</p>
                         </div>
                     </section>
 

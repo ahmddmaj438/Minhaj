@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\FriendlyName;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,18 +19,25 @@ class TCExamCrudController extends Controller
         $tables = collect($this->allowedTables())
             ->when($search !== '', function ($tables) use ($search) {
                 return $tables->filter(function (string $table) use ($search): bool {
-                    return str_contains(Str::lower($table), Str::lower($search))
-                        || str_contains(Str::lower($this->tableDisplayName($table)), Str::lower($search));
+                    $section = FriendlyName::dataSection($table);
+
+                    return str_contains(Str::lower($section['label']), Str::lower($search))
+                        || str_contains(Str::lower($section['group']), Str::lower($search))
+                        || str_contains(Str::lower($section['description']), Str::lower($search));
                 });
             })
-            ->values()
-            ->all();
+            ->map(fn (string $table): array => [
+                'key' => $table,
+                ...FriendlyName::dataSection($table),
+            ])
+            ->groupBy('group')
+            ->sortKeys();
 
         return view('data.tables', [
             'tables' => $tables,
-            'displayName' => fn (string $t) => $this->tableDisplayName($t),
             'search' => $search,
             'totalTables' => count($this->allowedTables()),
+            'shownTables' => $tables->flatten(1)->count(),
         ]);
     }
 
@@ -42,6 +50,7 @@ class TCExamCrudController extends Controller
         return view('data.index', [
             'table' => $table,
             'tableLabel' => $this->tableDisplayName($table),
+            'tableDescription' => FriendlyName::dataSection($table)['description'],
             'columns' => Schema::getColumnListing($table),
             'columnLabel' => fn (string $c) => $this->columnDisplayName($c),
             'rows' => $rows,
@@ -61,6 +70,7 @@ class TCExamCrudController extends Controller
             'mode' => 'create',
             'table' => $table,
             'tableLabel' => $this->tableDisplayName($table),
+            'tableDescription' => FriendlyName::dataSection($table)['description'],
             'columns' => $columns,
             'columnLabel' => fn (string $c) => $this->columnDisplayName($c),
             'primaryKey' => $pk,
@@ -84,7 +94,7 @@ class TCExamCrudController extends Controller
 
         DB::transaction(fn () => DB::table($table)->insert($payload));
 
-        return redirect()->route('data.table.index', ['table' => $table])->with('status', 'Record created.');
+        return redirect()->route('data.table.index', ['table' => $table])->with('status', 'New information was added.');
     }
 
     public function edit(string $table, string $id): View
@@ -100,6 +110,7 @@ class TCExamCrudController extends Controller
             'mode' => 'edit',
             'table' => $table,
             'tableLabel' => $this->tableDisplayName($table),
+            'tableDescription' => FriendlyName::dataSection($table)['description'],
             'columns' => $this->formFields($table),
             'columnLabel' => fn (string $c) => $this->columnDisplayName($c),
             'primaryKey' => $pk,
@@ -115,7 +126,7 @@ class TCExamCrudController extends Controller
         abort_unless($request->user()?->can('db.' . $table . '.update'), 403);
 
         $pk = $this->singlePrimaryKey($table);
-        abort_if(! $pk, 422, 'Update is available only for tables with a single primary key.');
+        abort_if(! $pk, 422, 'Changes can be saved only for data sections with one clear reference number.');
         abort_if(! DB::table($table)->where($pk, $id)->exists(), 404);
 
         $columns = $this->formFields($table);
@@ -125,7 +136,7 @@ class TCExamCrudController extends Controller
 
         DB::transaction(fn () => DB::table($table)->where($pk, $id)->update($payload));
 
-        return redirect()->route('data.table.index', ['table' => $table])->with('status', 'Record updated.');
+        return redirect()->route('data.table.index', ['table' => $table])->with('status', 'Changes were saved.');
     }
 
     public function destroy(Request $request, string $table, string $id): RedirectResponse
@@ -135,12 +146,12 @@ class TCExamCrudController extends Controller
         abort_unless($request->user()?->can('db.' . $table . '.delete'), 403);
 
         $pk = $this->singlePrimaryKey($table);
-        abort_if(! $pk, 422, 'Delete is available only for tables with a single primary key.');
+        abort_if(! $pk, 422, 'This information cannot be removed here because it does not have one clear reference number.');
         abort_if(! DB::table($table)->where($pk, $id)->exists(), 404);
 
         DB::transaction(fn () => DB::table($table)->where($pk, $id)->delete());
 
-        return back()->with('status', 'Record deleted.');
+        return back()->with('status', 'Information was removed from the system.');
     }
 
     private function allowedTables(): array
@@ -346,9 +357,7 @@ class TCExamCrudController extends Controller
 
     private function tableDisplayName(string $table): string
     {
-        $name = Str::replaceFirst('tcexam_', '', $table);
-        $name = Str::replaceFirst('tce_', '', $name);
-        return Str::of($name)->replace('_', ' ')->title()->toString();
+        return FriendlyName::dataSection($table)['label'];
     }
 
     private function fieldInput(string $name, string $type): string
@@ -460,29 +469,6 @@ class TCExamCrudController extends Controller
 
     private function columnDisplayName(string $column): string
     {
-        $map = [
-            'module_name' => 'Module Name',
-            'module_enabled' => 'Module Active',
-            'subject_name' => 'Subject Name',
-            'subject_description' => 'Subject Description',
-            'question_description' => 'Question Text',
-            'question_explanation' => 'Question Explanation',
-            'answer_description' => 'Answer Text',
-            'answer_isright' => 'Correct Answer',
-            'test_name' => 'Exam Name',
-            'test_description' => 'Exam Description',
-            'test_begin_time' => 'Start Date',
-            'test_end_time' => 'End Date',
-            'test_duration_time' => 'Duration (minutes)',
-            'test_score_threshold' => 'Pass Threshold',
-            'user_name' => 'Username',
-            'user_email' => 'Email',
-            'group_name' => 'Group Name',
-        ];
-        if (isset($map[$column])) {
-            return $map[$column];
-        }
-
-        return Str::of($column)->replace('_', ' ')->title()->toString();
+        return FriendlyName::column($column);
     }
 }

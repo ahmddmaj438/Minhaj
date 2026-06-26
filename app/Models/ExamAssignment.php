@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Models\Exam\InstructorExam;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ExamAssignment extends Model
 {
+    use HasFactory;
+
     public const STATUS_ASSIGNED = 'assigned';
     public const STATUS_OPEN = 'open';
     public const STATUS_CLOSED = 'closed';

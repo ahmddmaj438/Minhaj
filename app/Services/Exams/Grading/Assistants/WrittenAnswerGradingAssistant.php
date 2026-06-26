@@ -53,7 +53,7 @@ class WrittenAnswerGradingAssistant
 
         return $this->local->suggestFallback(
             $answer,
-            'No AI score was produced because no AI provider completed the request. Add a Groq/Gemini key or keep POLLINATIONS_ENABLED=true for the public fallback.',
+            'The AI service is currently unavailable. Please check the AI assistance settings and try again.',
             implode(' | ', array_filter($errors)),
         );
     }
@@ -77,10 +77,6 @@ class WrittenAnswerGradingAssistant
 
     private function publicError(Throwable $exception): string
     {
-        $message = trim($exception->getMessage());
-
-        return str($message)
-            ->limit(240)
-            ->toString();
+        return 'The AI service could not complete the request. Please check the AI assistance settings or try again later.';
     }
 }

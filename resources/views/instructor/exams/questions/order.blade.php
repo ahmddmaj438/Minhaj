@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Question Ordering</h2>
             </div>
-            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
+            <div class="text-sm text-slate-500">Step 4 of 5: Review</div>
         </div>
     </x-slot>
 
@@ -35,22 +35,24 @@
                 'totalQuestionMarks' => $totalQuestionMarks,
             ])
 
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
                 <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                     <div class="flex flex-col gap-4 border-b border-slate-100 pb-5 md:flex-row md:items-start md:justify-between">
                         <div>
-                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Current exam</p>
-                            <h3 class="mt-1 text-xl font-semibold text-slate-950">{{ $exam->title }}</h3>
-                            <p class="mt-2 text-sm text-slate-600">{{ $exam->course->code }} - {{ $exam->course->name }}</p>
+                            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Step 4: Review') }}</p>
+                            <h3 class="mt-1 text-xl font-semibold text-slate-950">{{ __('Arrange questions and marks') }}</h3>
+                            <p class="mt-2 text-sm text-slate-600">{{ __('This list controls the order students will see and the marks each question carries.') }}</p>
                         </div>
-                        <a href="{{ route('instructor.exams.question-types.index', $exam) }}"
-                            class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
-                            Add question
-                        </a>
-                        <a href="{{ route('instructor.exams.preview.show', $exam) }}"
-                            class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600">
-                            Preview exam
-                        </a>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('instructor.exams.question-types.index', $exam) }}"
+                                class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
+                                {{ __('Add Question') }}
+                            </a>
+                            <a href="{{ route('instructor.exams.preview.show', $exam) }}"
+                                class="inline-flex items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600">
+                                {{ __('Preview as Student') }}
+                            </a>
+                        </div>
                     </div>
 
                     @if ($questions->isEmpty())
@@ -100,14 +102,20 @@
                                             @endif
                                         </div>
 
-                                        <div class="flex gap-2 lg:flex-col">
+                                        <div class="flex flex-wrap gap-2 lg:flex-col">
                                             <a href="{{ $editRoutes[$question->id] }}"
                                                 class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100">
-                                                Edit
+                                                {{ __('Edit') }}
                                             </a>
+                                            @can('button.instructor.exams.questions.order.duplicate')
+                                                <button type="submit" form="duplicate-question-{{ $question->id }}"
+                                                    class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-100">
+                                                    {{ __('Duplicate') }}
+                                                </button>
+                                            @endcan
                                             <button type="submit" form="delete-question-{{ $question->id }}"
                                                 class="inline-flex items-center justify-center rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700 shadow-sm hover:bg-red-50">
-                                                Remove
+                                                {{ __('Remove') }}
                                             </button>
                                         </div>
                                     </div>
@@ -116,15 +124,19 @@
                         </form>
 
                         <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <p class="text-sm text-slate-600">Positions are normalized after saving, so the final order stays consecutive.</p>
+                            <p class="text-sm text-slate-600">{{ __('Positions are cleaned up after saving, so the student view stays numbered correctly.') }}</p>
                             <button type="submit" form="order-form"
                                 class="inline-flex items-center justify-center rounded-md bg-orange-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                                Save order and marks
+                                {{ __('Save Changes') }}
                             </button>
                         </div>
 
                         @foreach ($questions as $question)
-                            <form id="delete-question-{{ $question->id }}" method="POST" action="{{ route('instructor.exams.questions.destroy', [$exam, $question]) }}">
+                            <form id="duplicate-question-{{ $question->id }}" method="POST" action="{{ route('instructor.exams.questions.duplicate', [$exam, $question]) }}">
+                                @csrf
+                            </form>
+                            <form id="delete-question-{{ $question->id }}" method="POST" action="{{ route('instructor.exams.questions.destroy', [$exam, $question]) }}"
+                                onsubmit="return confirm('{{ __('Remove this question from the exam?') }}')">
                                 @csrf
                                 @method('DELETE')
                             </form>
@@ -132,34 +144,12 @@
                     @endif
                 </section>
 
-                <aside class="space-y-6">
-                    <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Exam totals</h3>
-                        <dl class="mt-4 space-y-3 text-sm">
-                            <div>
-                                <dt class="text-slate-500">Configured exam marks</dt>
-                                <dd class="mt-1 font-semibold text-slate-900">{{ $exam->total_marks }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-slate-500">Question marks total</dt>
-                                <dd class="mt-1 font-semibold text-slate-900">{{ number_format($totalQuestionMarks, 2) }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-slate-500">Questions</dt>
-                                <dd class="mt-1 font-semibold text-slate-900">{{ $questions->count() }}</dd>
-                            </div>
-                        </dl>
-                    </section>
-
-                    <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Ordering behavior</h3>
-                        <div class="mt-4 space-y-3 text-sm text-slate-600">
-                            <p>Use position numbers to set the final student-facing sequence.</p>
-                            <p>Removing a question will automatically close the numbering gap.</p>
-                            <p>Preview and publishing checks come in the next phase.</p>
-                        </div>
-                    </section>
-                </aside>
+                @include('instructor.exams.partials.exam-map', [
+                    'exam' => $exam,
+                    'questions' => $questions,
+                    'totalQuestionMarks' => $totalQuestionMarks,
+                    'editRoutes' => $editRoutes,
+                ])
             </div>
         </div>
     </div>

@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Multiple Choice Question</h2>
             </div>
-            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Questions</div>
         </div>
     </x-slot>
 
@@ -89,6 +89,10 @@
                             if (!this.allowMultiple) {
                                 this.correctMultiple = [this.correctSingle || '0'];
                             }
+                        },
+                        init() {
+                            this.correctSingle = this.correctSingle || this.correctMultiple[0] || '0';
+                            this.syncCorrectMode();
                         }
                     }">
                     @csrf
@@ -149,20 +153,16 @@
                                 <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
                                     <div class="flex flex-col gap-3 lg:flex-row lg:items-start">
                                         <div class="flex lg:w-36 lg:pt-2">
-                                            <template x-if="!allowMultiple">
-                                                <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                                                    <input type="radio" name="correct_options[]" :value="String(index)" x-model="correctSingle" @change="syncCorrectMode"
-                                                        class="border-slate-300 text-orange-600 focus:ring-orange-500">
-                                                    Correct
-                                                </label>
-                                            </template>
-                                            <template x-if="allowMultiple">
-                                                <label class="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
-                                                    <input type="checkbox" name="correct_options[]" :value="String(index)" x-model="correctMultiple"
-                                                        class="rounded border-slate-300 text-orange-600 focus:ring-orange-500">
-                                                    Correct
-                                                </label>
-                                            </template>
+                                            <label x-show="!allowMultiple" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                                                <input type="radio" name="correct_options[]" :value="String(index)" x-model="correctSingle" :checked="correctSingle === String(index)" @change="syncCorrectMode"
+                                                    class="border-slate-300 text-orange-600 focus:ring-orange-500">
+                                                Correct
+                                            </label>
+                                            <label x-show="allowMultiple" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+                                                <input type="checkbox" name="correct_options[]" :value="String(index)" x-model="correctMultiple" :checked="correctMultiple.includes(String(index))"
+                                                    class="rounded border-slate-300 text-orange-600 focus:ring-orange-500">
+                                                Correct
+                                            </label>
                                         </div>
 
                                         <div class="grid flex-1 gap-3">

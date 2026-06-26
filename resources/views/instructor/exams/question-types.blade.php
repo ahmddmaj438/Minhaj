@@ -5,7 +5,7 @@
                 <p class="text-sm font-medium text-orange-600">Exam Builder</p>
                 <h2 class="text-2xl font-semibold leading-tight text-slate-950">Choose Question Type</h2>
             </div>
-            <div class="text-sm text-slate-500">Step 3 of 5: Question Management</div>
+            <div class="text-sm text-slate-500">Step 3 of 5: Questions</div>
         </div>
     </x-slot>
 
@@ -32,17 +32,18 @@
                 'exam' => $exam,
                 'active' => 'questions',
                 'questionCount' => $questionCount,
+                'totalQuestionMarks' => $totalQuestionMarks,
             ])
 
-            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
+            <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
                 <div class="space-y-6">
                     <section class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                         <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                             <div>
-                                <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">Current exam</p>
+                                <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Step 3: Questions') }}</p>
                                 <h3 class="mt-1 text-xl font-semibold text-slate-950">{{ $exam->title }}</h3>
                                 <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-                                    {{ $exam->description ?: 'No description provided yet.' }}
+                                    {{ __('Choose the kind of question you want to place in the exam. After choosing, you will edit the question card details.') }}
                                 </p>
                             </div>
                             <dl class="grid min-w-56 grid-cols-2 gap-3 text-sm">
@@ -56,6 +57,69 @@
                                 </div>
                             </dl>
                         </div>
+                    </section>
+
+                    <section class="rounded-lg border border-orange-200 bg-white p-6 shadow-sm">
+                        <div class="flex flex-col gap-3 border-b border-orange-100 pb-5 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Question Bank') }}</p>
+                                <h3 class="mt-1 text-xl font-semibold text-slate-950">{{ __('Add an existing question') }}</h3>
+                                <p class="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                                    {{ __('Reuse a saved question by adding a copy to this exam. The original question stays unchanged in the question bank.') }}
+                                </p>
+                            </div>
+                            <span class="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                                {{ __(':count saved', ['count' => $bankQuestions->count()]) }}
+                            </span>
+                        </div>
+
+                        @if ($bankQuestions->isEmpty())
+                            <div class="mt-5 rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-600">
+                                <p class="font-semibold text-slate-900">{{ __('No saved questions yet') }}</p>
+                                <p class="mt-1">{{ __('Edit any question and choose Save this question to the question bank. Saved questions will appear here for reuse.') }}</p>
+                            </div>
+                        @else
+                            <div class="mt-5 grid gap-4 md:grid-cols-2">
+                                @foreach ($bankQuestions as $bankQuestion)
+                                    @php
+                                        $bankPrompt = $bankQuestion->prompt ?? [];
+                                        $bankQuestionText = $bankPrompt['question_text']
+                                            ?? $bankPrompt['statement']
+                                            ?? $bankPrompt['problem_statement']
+                                            ?? $bankPrompt['scenario']
+                                            ?? $bankQuestion->title;
+                                    @endphp
+                                    <article class="flex min-h-44 flex-col justify-between rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                                        <div>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <span class="rounded-full bg-slate-950 px-2.5 py-1 text-xs font-semibold text-white">
+                                                    {{ __(str($bankQuestion->type)->replace('_', ' ')->title()->toString()) }}
+                                                </span>
+                                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                    {{ number_format((float) $bankQuestion->marks, 2) }} {{ __('marks') }}
+                                                </span>
+                                                @if ($bankQuestion->exam?->course)
+                                                    <span class="rounded-full bg-orange-100 px-2.5 py-1 text-xs font-semibold text-orange-700">
+                                                        {{ $bankQuestion->exam->course->code }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <h4 class="mt-3 text-base font-semibold text-slate-950">{{ $bankQuestion->title }}</h4>
+                                            <p class="mt-2 text-sm leading-6 text-slate-600">{{ str($bankQuestionText)->limit(180) }}</p>
+                                        </div>
+
+                                        <form method="POST" action="{{ route('instructor.exams.questions.bank.store', $exam) }}" class="mt-4">
+                                            @csrf
+                                            <input type="hidden" name="bank_question_id" value="{{ $bankQuestion->id }}">
+                                            <button type="submit"
+                                                class="inline-flex w-full items-center justify-center rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
+                                                {{ __('Add from question bank') }}
+                                            </button>
+                                        </form>
+                                    </article>
+                                @endforeach
+                            </div>
+                        @endif
                     </section>
 
                     @foreach ($categories as $category)
@@ -120,7 +184,7 @@
 
                                         <button type="submit"
                                             class="mt-5 inline-flex w-full items-center justify-center rounded-md bg-slate-950 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
-                                            Select type
+                                            {{ __('Add Question') }}
                                         </button>
                                     </form>
                                 @endforeach
@@ -129,58 +193,11 @@
                     @endforeach
                 </div>
 
-                <aside class="space-y-6">
-                    <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Recommended next steps</h3>
-                        <div class="mt-4 grid gap-3">
-                            <a href="{{ route('instructor.exams.questions.order.index', $exam) }}"
-                                class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 hover:border-orange-300">
-                                1. Review order and marks
-                            </a>
-                            <a href="{{ route('instructor.exams.preview.show', $exam) }}"
-                                class="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 hover:border-orange-300">
-                                2. Preview the student view
-                            </a>
-                            <a href="{{ route('instructor.exams.publish.show', $exam) }}"
-                                class="rounded-md bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-orange-600">
-                                3. Check readiness and publish
-                            </a>
-                        </div>
-                    </section>
-
-                    <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Draft summary</h3>
-                        <dl class="mt-4 space-y-3 text-sm">
-                            <div>
-                                <dt class="text-slate-500">Selected questions</dt>
-                                <dd class="mt-1 font-semibold text-slate-900">{{ $questionCount }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-slate-500">Status</dt>
-                                <dd class="mt-1 font-semibold capitalize text-slate-900">{{ $exam->status }}</dd>
-                            </div>
-                            <div>
-                                <dt class="text-slate-500">Duration</dt>
-                                <dd class="mt-1 font-semibold text-slate-900">{{ $exam->duration_minutes }} minutes</dd>
-                            </div>
-                        </dl>
-                        <a href="{{ route('instructor.exams.questions.order.index', $exam) }}"
-                            class="mt-5 inline-flex w-full items-center justify-center rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-600">
-                            Manage order
-                        </a>
-                        <a href="{{ route('instructor.exams.preview.show', $exam) }}"
-                            class="mt-3 inline-flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 shadow-sm hover:bg-slate-50">
-                            Preview exam
-                        </a>
-                    </section>
-
-                    <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                        <h3 class="text-base font-semibold text-slate-950">Question schema</h3>
-                        <p class="mt-3 text-sm leading-6 text-slate-600">
-                            Selected types are stored in <span class="font-mono text-slate-800">instructor_exam_questions</span> with JSON fields for future builders, coding templates, resources, and auto-grading settings.
-                        </p>
-                    </section>
-                </aside>
+                @include('instructor.exams.partials.exam-map', [
+                    'exam' => $exam,
+                    'questions' => $questions,
+                    'totalQuestionMarks' => $totalQuestionMarks,
+                ])
             </div>
         </div>
     </div>

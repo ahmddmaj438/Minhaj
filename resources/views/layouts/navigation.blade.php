@@ -18,8 +18,8 @@
                 'can' => Auth::user()->can('screen.instructor.grading.index.view'),
             ],
             [
-                'label' => __('Browse data tables'),
-                'description' => __('Open imported TCExam tables.'),
+                'label' => __('Browse system data'),
+                'description' => __('Open friendly data sections.'),
                 'href' => Route::has('data.tables.index') ? route('data.tables.index') : null,
                 'can' => Auth::user()->can('screen.data.tables.index.view'),
             ],
@@ -79,9 +79,14 @@
                             {{ __('Academics') }}
                         </x-nav-link>
                     @endcan
+                    @can('screen.reports.index.view')
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                            {{ __('Reports') }}
+                        </x-nav-link>
+                    @endcan
                     @can('screen.data.tables.index.view')
                         <x-nav-link :href="route('data.tables.index')" :active="request()->routeIs('data.*')">
-                            {{ __('Data Management') }}
+                            {{ __('System Data') }}
                         </x-nav-link>
                     @endcan
                     @can('screen.instructor.exams.create.view')
@@ -231,9 +236,14 @@
                     {{ __('Academics') }}
                 </x-responsive-nav-link>
             @endcan
-            @can('screen.data.tables.index.view')
-                <x-responsive-nav-link :href="route('data.tables.index')" :active="request()->routeIs('data.*')">
-                    {{ __('Data Management') }}
+            @can('screen.reports.index.view')
+                <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                    {{ __('Reports') }}
+                </x-responsive-nav-link>
+            @endcan
+                    @can('screen.data.tables.index.view')
+                        <x-responsive-nav-link :href="route('data.tables.index')" :active="request()->routeIs('data.*')">
+                    {{ __('System Data') }}
                 </x-responsive-nav-link>
             @endcan
             @can('screen.instructor.exams.create.view')

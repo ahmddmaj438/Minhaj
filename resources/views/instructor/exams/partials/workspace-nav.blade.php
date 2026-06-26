@@ -10,31 +10,31 @@
     $tabs = [
         [
             'key' => 'information',
-            'label' => __('Exam Information'),
-            'href' => $exam ? route('instructor.exams.edit', $exam).'#exam-information' : null,
+            'label' => __('Exam Header'),
+            'href' => $exam ? route('instructor.exams.edit', $exam).'#exam-header' : null,
             'meta' => $exam ? __(':count min', ['count' => $exam->duration_minutes]) : __('Start here'),
         ],
         [
             'key' => 'format',
-            'label' => __('Exam Format'),
-            'href' => $exam ? route('instructor.exams.edit', $exam).'#exam-format' : null,
-            'meta' => $formatTitle,
+            'label' => __('Instructions'),
+            'href' => $exam ? route('instructor.exams.edit', $exam).'#exam-instructions' : null,
+            'meta' => $exam && filled($exam->description) ? __('Ready') : __('Add rules'),
         ],
         [
             'key' => 'questions',
-            'label' => __('Question Management'),
+            'label' => __('Questions'),
             'href' => $exam ? route('instructor.exams.question-types.index', $exam) : null,
             'meta' => $exam ? __(':count questions', ['count' => $questionCount ?? $exam->questions()->count()]) : __('Build exam'),
         ],
         [
             'key' => 'preview',
-            'label' => __('Preview'),
+            'label' => __('Review'),
             'href' => $exam ? route('instructor.exams.preview.show', $exam) : null,
             'meta' => __('Student view'),
         ],
         [
             'key' => 'publish',
-            'label' => __('Publish'),
+            'label' => __('Preview and Publish'),
             'href' => $exam ? route('instructor.exams.publish.show', $exam) : null,
             'meta' => $exam ? __(ucfirst($exam->status)) : __('Final check'),
         ],
@@ -80,10 +80,10 @@
 <section class="mb-6 rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Exam workspace') }}</p>
+            <p class="text-sm font-semibold uppercase tracking-wide text-orange-600">{{ __('Exam Builder') }}</p>
             <h3 class="mt-1 text-lg font-semibold text-slate-950">{{ $exam?->title ?? __('Create a new exam') }}</h3>
             <p class="mt-1 text-sm text-slate-600">
-                {{ $exam ? $exam->course->code.' - '.$exam->course->name : __('Complete each step in order, then publish when ready.') }}
+                {{ $exam ? $exam->course->code.' - '.$exam->course->name : __('Build the same structure students will see.') }}
             </p>
         </div>
 

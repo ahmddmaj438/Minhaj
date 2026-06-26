@@ -5,6 +5,7 @@ namespace App\Http\Requests\Academic;
 use App\Models\StudentProfile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class StoreStudentProfileRequest extends FormRequest
 {
@@ -16,7 +17,10 @@ class StoreStudentProfileRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id', 'unique:student_profiles,user_id'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id', 'unique:student_profiles,user_id'],
+            'student_name' => ['required_without:user_id', 'nullable', 'string', 'max:255'],
+            'student_email' => ['required_without:user_id', 'nullable', 'email', 'max:255', 'unique:users,email'],
+            'student_password' => ['required_without:user_id', 'nullable', Password::defaults()],
             'major_id' => ['nullable', 'integer', 'exists:majors,id'],
             'student_number' => ['required', 'string', 'max:100', 'unique:student_profiles,student_number'],
             'academic_status' => ['required', Rule::in([
@@ -33,7 +37,10 @@ class StoreStudentProfileRequest extends FormRequest
     {
         return [
             'user_id' => 'student user',
-            'major_id' => 'major',
+            'student_name' => 'student name',
+            'student_email' => 'student email',
+            'student_password' => 'temporary password',
+            'major_id' => 'program',
             'student_number' => 'student number',
             'academic_status' => 'academic status',
             'admission_year' => 'admission year',

@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Instructor;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Instructor\StoreQuestionBankSelectionRequest;
 use App\Http\Requests\Instructor\StoreQuestionTypeSelectionRequest;
 use App\Models\Exam\InstructorExam;
 use App\Models\Exam\InstructorExamQuestion;
 use App\Support\Exams\QuestionTypeCatalog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -15,11 +17,15 @@ class QuestionTypeController extends Controller
     public function index(InstructorExam $exam): View
     {
         $this->authorizeInstructorExam($exam);
+        $questions = $exam->questions()->get();
 
         return view('instructor.exams.question-types', [
-            'exam' => $exam->load('course'),
+            'exam' => $exam->load('course.majors'),
             'categories' => QuestionTypeCatalog::categories(),
-            'questionCount' => $exam->questions()->count(),
+            'questions' => $questions,
+            'bankQuestions' => $this->bankQuestionsFor($exam),
+            'questionCount' => $questions->count(),
+            'totalQuestionMarks' => $questions->sum(fn (InstructorExamQuestion $question) => (float) $question->marks),
         ]);
     }
 
@@ -99,8 +105,58 @@ class QuestionTypeController extends Controller
             ->with('status', $type['label'] . ' question type selected. Its dedicated builder will be added in the next phase.');
     }
 
+    public function storeFromBank(StoreQuestionBankSelectionRequest $request, InstructorExam $exam): RedirectResponse
+    {
+        abort_unless($request->user()?->can('button.instructor.exams.questions.select_type'), 403);
+        abort_unless($request->user()?->can('db.instructor_exam_questions.insert'), 403);
+
+        $this->authorizeInstructorExam($exam);
+
+        $source = $this->bankQuestionQuery($exam)
+            ->whereKey($request->validated()['bank_question_id'])
+            ->firstOrFail();
+
+        $copy = $source->replicate([
+            'tcexam_question_id',
+            'tcexam_subject_id',
+        ]);
+        $copy->instructor_exam_id = $exam->id;
+        $copy->position = $exam->questions()->max('position') + 1;
+        $copy->save_to_bank = false;
+        $copy->tcexam_question_id = null;
+        $copy->tcexam_subject_id = null;
+        $copy->save();
+
+        return redirect()
+            ->route('instructor.exams.questions.order.index', $exam)
+            ->with('status', __('Question added from the question bank. Review it before publishing.'));
+    }
+
     private function authorizeInstructorExam(InstructorExam $exam): void
     {
         abort_unless(auth()->id() === $exam->instructor_id || auth()->user()?->isSuperAdmin(), 403);
+    }
+
+    private function bankQuestionsFor(InstructorExam $exam)
+    {
+        return $this->bankQuestionQuery($exam)
+            ->with('exam.course')
+            ->latest()
+            ->limit(12)
+            ->get();
+    }
+
+    private function bankQuestionQuery(InstructorExam $exam): Builder
+    {
+        $user = auth()->user();
+
+        return InstructorExamQuestion::query()
+            ->where('save_to_bank', true)
+            ->where('instructor_exam_id', '!=', $exam->id)
+            ->whereHas('exam', function (Builder $query) use ($user): void {
+                if (! $user?->isSuperAdmin()) {
+                    $query->where('instructor_id', $user?->id);
+                }
+            });
     }
 }

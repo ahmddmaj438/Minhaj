@@ -28,7 +28,11 @@ class AiConfigurationManager
     {
         $configuration = $this->active();
 
-        if (! $configuration || blank($configuration->api_key)) {
+        if (! $configuration) {
+            return;
+        }
+
+        if (blank($configuration->api_key) && $configuration->provider !== 'pollinations') {
             return;
         }
 
@@ -46,6 +50,18 @@ class AiConfigurationManager
                 'services.ai_grading.google.model' => $configuration->model_name,
                 'services.ai_grading.google.endpoint' => rtrim(
                     $configuration->base_url ?: 'https://generativelanguage.googleapis.com',
+                    '/'
+                ),
+            ]);
+        }
+
+        if ($configuration->provider === 'pollinations') {
+            config([
+                'services.ai_grading.provider' => 'pollinations',
+                'services.ai_grading.pollinations.enabled' => true,
+                'services.ai_grading.pollinations.model' => $configuration->model_name,
+                'services.ai_grading.pollinations.endpoint' => rtrim(
+                    $configuration->base_url ?: 'https://text.pollinations.ai',
                     '/'
                 ),
             ]);

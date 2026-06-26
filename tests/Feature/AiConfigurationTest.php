@@ -6,6 +6,7 @@ use App\Models\AiConfiguration;
 use App\Models\User;
 use App\Services\AI\AiConfigurationManager;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -95,7 +96,11 @@ class AiConfigurationTest extends TestCase
     public function test_admin_can_test_an_ai_connection_without_saving_the_key(): void
     {
         Http::fake([
-            'https://api.openai.com/v1/models' => Http::response(['data' => []]),
+            'https://api.openai.com/v1/chat/completions' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => 'AI configuration is working.']],
+                ],
+            ]),
         ]);
 
         $admin = User::factory()->create();
@@ -114,9 +119,118 @@ class AiConfigurationTest extends TestCase
 
         $this->assertDatabaseCount('ai_configurations', 0);
         Http::assertSent(fn ($request): bool =>
-            $request->url() === 'https://api.openai.com/v1/models'
+            $request->url() === 'https://api.openai.com/v1/chat/completions'
             && $request->hasHeader('Authorization', 'Bearer temporary-test-key')
+            && str_contains($request->body(), 'Reply with: AI configuration is working.')
         );
+    }
+
+    public function test_ai_connection_test_requires_api_key(): void
+    {
+        $admin = User::factory()->create();
+
+        $this
+            ->actingAs($admin)
+            ->from(route('admin.settings.ai-configuration.edit'))
+            ->post(route('admin.settings.ai-configuration.test'), [
+                'provider' => 'openai',
+                'api_key' => '',
+                'model_name' => 'gpt-4.1-mini',
+                'base_url' => 'https://api.openai.com/v1',
+                'status' => AiConfiguration::STATUS_INACTIVE,
+            ])
+            ->assertRedirect(route('admin.settings.ai-configuration.edit', absolute: false))
+            ->assertSessionHasErrors(['api_key' => 'API key is missing.']);
+    }
+
+    public function test_ai_connection_test_reports_rejected_key_or_model_cleanly(): void
+    {
+        Http::fake([
+            'https://api.openai.com/v1/chat/completions' => Http::response(['error' => ['message' => 'bad key']], 401),
+        ]);
+
+        $admin = User::factory()->create();
+
+        $this
+            ->actingAs($admin)
+            ->from(route('admin.settings.ai-configuration.edit'))
+            ->post(route('admin.settings.ai-configuration.test'), [
+                'provider' => 'openai',
+                'api_key' => 'wrong-key',
+                'model_name' => 'wrong-model',
+                'base_url' => 'https://api.openai.com/v1',
+                'status' => AiConfiguration::STATUS_INACTIVE,
+            ])
+            ->assertRedirect(route('admin.settings.ai-configuration.edit', absolute: false))
+            ->assertSessionHasErrors(['connection' => 'AI service rejected the key or model.']);
+    }
+
+    public function test_ai_connection_test_reports_timeout_cleanly(): void
+    {
+        Http::fake(fn () => throw new ConnectionException('timeout'));
+
+        $admin = User::factory()->create();
+
+        $this
+            ->actingAs($admin)
+            ->from(route('admin.settings.ai-configuration.edit'))
+            ->post(route('admin.settings.ai-configuration.test'), [
+                'provider' => 'openai',
+                'api_key' => 'temporary-test-key',
+                'model_name' => 'gpt-4.1-mini',
+                'base_url' => 'https://api.openai.com/v1',
+                'status' => AiConfiguration::STATUS_INACTIVE,
+            ])
+            ->assertRedirect(route('admin.settings.ai-configuration.edit', absolute: false))
+            ->assertSessionHasErrors(['connection' => 'AI service is currently unavailable.']);
+    }
+
+    public function test_ai_connection_test_reports_invalid_format_cleanly(): void
+    {
+        Http::fake([
+            'https://api.openai.com/v1/chat/completions' => Http::response(['unexpected' => true]),
+        ]);
+
+        $admin = User::factory()->create();
+
+        $this
+            ->actingAs($admin)
+            ->from(route('admin.settings.ai-configuration.edit'))
+            ->post(route('admin.settings.ai-configuration.test'), [
+                'provider' => 'openai',
+                'api_key' => 'temporary-test-key',
+                'model_name' => 'gpt-4.1-mini',
+                'base_url' => 'https://api.openai.com/v1',
+                'status' => AiConfiguration::STATUS_INACTIVE,
+            ])
+            ->assertRedirect(route('admin.settings.ai-configuration.edit', absolute: false))
+            ->assertSessionHasErrors(['connection' => 'AI test failed. Please review the settings.']);
+    }
+
+    public function test_ai_connection_test_reports_empty_response_cleanly(): void
+    {
+        Http::fake([
+            'https://api.openai.com/v1/chat/completions' => Http::response([
+                'choices' => [
+                    ['message' => ['content' => '']],
+                ],
+            ]),
+        ]);
+
+        $admin = User::factory()->create();
+
+        $this
+            ->actingAs($admin)
+            ->from(route('admin.settings.ai-configuration.edit'))
+            ->post(route('admin.settings.ai-configuration.test'), [
+                'provider' => 'openai',
+                'api_key' => 'temporary-test-key',
+                'model_name' => 'gpt-4.1-mini',
+                'base_url' => 'https://api.openai.com/v1',
+                'status' => AiConfiguration::STATUS_INACTIVE,
+            ])
+            ->assertRedirect(route('admin.settings.ai-configuration.edit', absolute: false))
+            ->assertSessionHasErrors(['connection' => 'AI response was empty. Please check the configuration.']);
     }
 
     public function test_api_key_is_not_flashed_after_validation_failure(): void

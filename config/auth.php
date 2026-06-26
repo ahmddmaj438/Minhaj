@@ -114,4 +114,18 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Authorization Test Bypass
+    |--------------------------------------------------------------------------
+    |
+    | Existing feature tests create simple users without assigning every demo
+    | permission. Keep that convenience by default in testing, while allowing
+    | security tests to disable the bypass and exercise the real permission
+    | checks.
+    |
+    */
+
+    'testing_bypass_permissions' => env('AUTH_TESTING_BYPASS_PERMISSIONS', true),
+
 ];

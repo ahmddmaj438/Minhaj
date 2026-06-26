@@ -168,6 +168,19 @@ class SecurityHardeningTest extends TestCase
         $this->put('/storage/exam-resources/exams/1/questions/1/topology.pkt', ['content'])->assertForbidden();
     }
 
+    public function test_missing_page_uses_friendly_error_message(): void
+    {
+        $user = User::factory()->create();
+
+        $this
+            ->actingAs($user)
+            ->get('/missing-demo-page')
+            ->assertNotFound()
+            ->assertSee('Information not found')
+            ->assertDontSee('NotFoundHttpException')
+            ->assertDontSee('Stack trace');
+    }
+
     public function test_packet_tracer_upload_rejects_executable_payloads_and_bad_extensions(): void
     {
         Storage::fake('local');

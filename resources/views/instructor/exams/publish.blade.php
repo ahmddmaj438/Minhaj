@@ -61,6 +61,58 @@
                             </a>
                         @endforeach
                     </div>
+
+                    @if (! empty($readiness['question_issue_details']))
+                        <section class="mt-6 rounded-xl border border-red-200 bg-red-50 p-5">
+                            <div class="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-[0.18em] text-red-700">{{ __('Question problems') }}</p>
+                                    <h3 class="mt-1 text-lg font-semibold text-red-950">{{ __('Fix these questions before publishing') }}</h3>
+                                    <p class="mt-2 text-sm leading-6 text-red-800">
+                                        {{ __('Each item below shows the exact question and what must be corrected.') }}
+                                    </p>
+                                </div>
+                                <span class="w-fit rounded-full bg-white px-3 py-1 text-xs font-semibold text-red-700">
+                                    {{ __(':count questions need review', ['count' => count($readiness['question_issue_details'])]) }}
+                                </span>
+                            </div>
+
+                            <div class="mt-5 space-y-4">
+                                @foreach ($readiness['question_issue_details'] as $problemQuestion)
+                                    <article class="rounded-lg border border-red-200 bg-white p-4 shadow-sm">
+                                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div>
+                                                <div class="flex flex-wrap items-center gap-2">
+                                                    <span class="rounded-full bg-red-600 px-2.5 py-1 text-xs font-semibold text-white">
+                                                        {{ __('Question :number', ['number' => $problemQuestion['number']]) }}
+                                                    </span>
+                                                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                                        {{ __($problemQuestion['type']) }}
+                                                    </span>
+                                                </div>
+                                                <h4 class="mt-3 text-base font-semibold text-slate-950">{{ $problemQuestion['title'] }}</h4>
+                                                <p class="mt-1 text-sm leading-6 text-slate-600">
+                                                    {{ filled($problemQuestion['text']) ? str($problemQuestion['text'])->limit(180) : __('No question text has been added yet.') }}
+                                                </p>
+                                            </div>
+                                            <a href="{{ $problemQuestion['action'] }}"
+                                                class="inline-flex shrink-0 items-center justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700">
+                                                {{ __('Fix this question') }}
+                                            </a>
+                                        </div>
+
+                                        <ul class="mt-4 grid gap-2 text-sm text-red-900">
+                                            @foreach ($problemQuestion['issues'] as $issue)
+                                                <li class="rounded-md bg-red-50 px-3 py-2">
+                                                    {{ __($issue) }}
+                                                </li>
+                                            @endforeach
+                                        </ul>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+                    @endif
                 </section>
 
                 <aside class="space-y-6">

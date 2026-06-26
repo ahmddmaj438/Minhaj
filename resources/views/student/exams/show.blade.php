@@ -276,6 +276,7 @@
             const examIndexUrl = @js(route('student.exams.index'));
             const submitUrl = @js(route('student.exams.sessions.submit', $session));
             const submittedKey = `minhaj:exam-session-submitted:${@js($session->id)}`;
+            let formDirty = false;
 
             const redirectToExamList = () => {
                 window.location.replace(examIndexUrl);
@@ -331,10 +332,75 @@
                 const targetUrl = submitter?.getAttribute('formaction') || event.currentTarget.action;
 
                 if (submitter?.hasAttribute('data-submit-exam-button') || targetUrl === submitUrl) {
+                    const unanswered = unansweredQuestionCount();
+                    const message = unanswered > 0
+                        ? `You still have ${unanswered} unanswered question(s). Submit the exam now?`
+                        : 'Submit the exam now? You cannot change answers after final submission.';
+                    if (!window.confirm(message)) {
+                        event.preventDefault();
+                        return;
+                    }
                     sessionStorage.setItem(submittedKey, '1');
                     coverExamPage();
+                } else {
+                    formDirty = false;
                 }
             });
+
+            const hasValue = (input) => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    return input.checked;
+                }
+
+                return String(input.value || '').trim() !== '';
+            };
+
+            const refreshQuestionStatus = () => {
+                const questionIds = new Set(Array.from(document.querySelectorAll('[data-question-card]')).map((card) => card.dataset.questionCard));
+                questionIds.forEach((id) => {
+                    const inputs = Array.from(document.querySelectorAll(`[data-answer-input="${id}"]`));
+                    const answered = inputs.some(hasValue);
+                    const status = document.querySelector(`[data-question-status="${id}"]`);
+                    if (!status) return;
+                    status.textContent = answered ? 'Answered' : 'Unanswered';
+                    status.className = answered
+                        ? 'rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800'
+                        : 'rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800';
+                });
+            };
+
+            const unansweredQuestionCount = () => {
+                const questionIds = new Set(Array.from(document.querySelectorAll('[data-question-card]')).map((card) => card.dataset.questionCard));
+                let count = 0;
+                questionIds.forEach((id) => {
+                    const inputs = Array.from(document.querySelectorAll(`[data-answer-input="${id}"]`));
+                    if (!inputs.some(hasValue)) count += 1;
+                });
+
+                return count;
+            };
+
+            document.querySelectorAll('[data-answer-input]').forEach((input) => {
+                input.addEventListener('input', () => {
+                    formDirty = true;
+                    refreshQuestionStatus();
+                });
+                input.addEventListener('change', () => {
+                    formDirty = true;
+                    refreshQuestionStatus();
+                });
+            });
+
+            window.addEventListener('beforeunload', (event) => {
+                if (!formDirty || sessionStorage.getItem(submittedKey) === '1') {
+                    return;
+                }
+
+                event.preventDefault();
+                event.returnValue = '';
+            });
+
+            refreshQuestionStatus();
 
             window.addEventListener('minhaj-exam-expired', () => {
                 const form = document.querySelector('[data-exam-session-form]');

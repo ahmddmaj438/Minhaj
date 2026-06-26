@@ -27,7 +27,7 @@ class SaveAiConfigurationRequest extends FormRequest
         return [
             'provider' => ['required', Rule::in(AiProviderCatalog::keys())],
             'api_key' => [
-                Rule::requiredIf(! $storedConfiguration?->api_key),
+                Rule::requiredIf(AiProviderCatalog::requiresApiKey((string) $this->input('provider')) && ! $storedConfiguration?->api_key),
                 'nullable',
                 'string',
                 'max:10000',
@@ -43,6 +43,16 @@ class SaveAiConfigurationRequest extends FormRequest
                 AiConfiguration::STATUS_ACTIVE,
                 AiConfiguration::STATUS_INACTIVE,
             ])],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'api_key.required' => 'API key is missing.',
+            'model_name.required' => 'Please enter the model name.',
+            'base_url.required' => 'Please enter the provider URL.',
+            'provider.in' => 'AI test failed. Please review the settings.',
         ];
     }
 }

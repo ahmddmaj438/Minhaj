@@ -120,10 +120,10 @@
                                                 try {
                                                     const data = await this.generateFromBackend();
                                                     if (!data.suggestion) {
-                                                        throw new Error('The server response did not include a grading suggestion.');
+                                                        throw new Error('No grading suggestion was returned.');
                                                     }
                                                     if (data.suggestion.suggested_score === null || data.suggestion.suggested_score === undefined) {
-                                                        this.backendError = data.suggestion.provider_error || data.suggestion.provider_note || 'Backend providers did not generate a score.';
+                                                        this.backendError = data.suggestion.provider_note || 'The AI service did not generate a score.';
                                                         await this.generateFromPuter();
                                                     } else {
                                                         this.applySuggestion(data.suggestion);
@@ -133,7 +133,7 @@
                                                     try {
                                                         await this.generateFromPuter();
                                                     } catch (puterError) {
-                                                        alert(`Backend AI failed: ${this.backendError}\nBrowser AI failed: ${puterError.message}`);
+                                                        alert('The AI service is currently unavailable. Please review this answer manually or try again later.');
                                                     }
                                                 } finally {
                                                     this.loading = false;
@@ -153,17 +153,17 @@
                                                 try {
                                                     data = raw ? JSON.parse(raw) : {};
                                                 } catch (parseError) {
-                                                    throw new Error('The server did not return a JSON grading suggestion. Check login, permissions, or Laravel logs.');
+                                                    throw new Error('The AI service could not prepare a grading suggestion.');
                                                 }
                                                 if (!response.ok) {
-                                                    throw new Error(data.message || 'Unable to generate suggestion.');
+                                                    throw new Error(data.message || 'Unable to generate a grading suggestion.');
                                                 }
 
                                                 return data;
                                             },
                                             async generateFromPuter() {
                                                 if (!window.puter?.ai?.chat) {
-                                                    throw new Error('Puter AI script is not loaded. Check internet access or ad/script blockers.');
+                                                    throw new Error('Browser AI assistance is not available right now.');
                                                 }
 
                                                 const prompt = JSON.stringify({
@@ -195,29 +195,29 @@
                                                 try {
                                                     data = raw ? JSON.parse(raw) : {};
                                                 } catch (parseError) {
-                                                    throw new Error('Browser AI generated a score, but Laravel did not return JSON while saving it.');
+                                                    throw new Error('The grading suggestion could not be saved.');
                                                 }
                                                 if (!saveResponse.ok) {
-                                                    throw new Error(data.message || 'Browser AI generated a score, but Laravel rejected it.');
+                                                    throw new Error(data.message || 'The grading suggestion could not be saved.');
                                                 }
                                                 if (!data.suggestion) {
-                                                    throw new Error('Browser AI save response did not include a suggestion.');
+                                                    throw new Error('The saved grading suggestion was not available.');
                                                 }
                                                 this.applySuggestion(data.suggestion);
                                             },
                                             parseSuggestion(text) {
                                                 const match = text.match(/\{[\s\S]*\}/);
                                                 if (!match) {
-                                                    throw new Error('Browser AI did not return JSON.');
+                                                    throw new Error('The AI service returned an incomplete suggestion.');
                                                 }
                                                 let data = {};
                                                 try {
                                                     data = JSON.parse(match[0]);
                                                 } catch (parseError) {
-                                                    throw new Error('Browser AI returned invalid JSON.');
+                                                    throw new Error('The AI service returned a suggestion that could not be read.');
                                                 }
                                                 if (data.suggested_score === null || data.suggested_score === undefined || Number.isNaN(Number(data.suggested_score))) {
-                                                    throw new Error('Browser AI did not return a numeric suggested_score.');
+                                                    throw new Error('The AI service did not return a usable score.');
                                                 }
                                                 const maxScore = Number(this.evaluation.question.max_score || 0);
 
@@ -226,7 +226,7 @@
                                                     max_score: maxScore,
                                                     confidence: Math.min(Math.max(Number(data.confidence ?? 0.5), 0), 1),
                                                     feedback: String(data.feedback || 'Review the browser AI suggestion before saving.'),
-                                                    rationale: String(data.rationale || 'Generated from the structured question, rubric, expected answer, and student answer.'),
+                                                    rationale: String(data.rationale || 'Generated from the question, rubric, expected answer, and student answer.'),
                                                     strengths: Array.isArray(data.strengths) ? data.strengths.map(String).filter(Boolean) : [],
                                                     improvements: Array.isArray(data.improvements) ? data.improvements.map(String).filter(Boolean) : [],
                                                     rubric_assessment: Array.isArray(data.rubric_assessment) ? data.rubric_assessment : [],
@@ -315,9 +315,9 @@
                                                         <p class="rounded-md bg-violet-50 px-3 py-2 text-xs text-violet-800" x-text="suggestion.provider_note"></p>
                                                     </template>
                                                     <template x-if="suggestion.provider_error">
-                                                        <p class="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">API issue: <span x-text="suggestion.provider_error"></span></p>
+                                                        <p class="rounded-md bg-red-50 px-3 py-2 text-xs text-red-700">The AI service did not complete the request. Please try again later.</p>
                                                     </template>
-                                                    <p class="text-xs text-slate-500">Provider: <span x-text="suggestion.provider || 'unknown'"></span></p>
+                                                    <p class="text-xs text-slate-500">AI source: <span x-text="suggestion.provider === 'ai_provider_unavailable' ? 'Not available' : 'Configured assistance'"></span></p>
                                                 </div>
                                             </div>
                                         </template>

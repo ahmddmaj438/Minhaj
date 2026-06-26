@@ -19,7 +19,7 @@ class QuestionOrderingController extends Controller
         $questions = $exam->questions()->get();
 
         return view('instructor.exams.questions.order', [
-            'exam' => $exam->load('course'),
+            'exam' => $exam->load('course.majors'),
             'questions' => $questions,
             'totalQuestionMarks' => $questions->sum(fn (InstructorExamQuestion $question) => (float) $question->marks),
             'editRoutes' => $this->editRoutes($questions),
@@ -55,6 +55,26 @@ class QuestionOrderingController extends Controller
         return redirect()
             ->route('instructor.exams.questions.order.index', $exam)
             ->with('status', 'Question order and marks updated.');
+    }
+
+    public function duplicate(InstructorExam $exam, InstructorExamQuestion $question): RedirectResponse
+    {
+        abort_unless(auth()->user()?->can('button.instructor.exams.questions.order.duplicate'), 403);
+        abort_unless(auth()->user()?->can('db.instructor_exam_questions.insert'), 403);
+
+        $this->authorizeExam($exam);
+        abort_unless($question->instructor_exam_id === $exam->id, 404);
+
+        $copy = $question->replicate([
+            'tcexam_question_id',
+        ]);
+        $copy->title = 'Copy of '.$question->title;
+        $copy->position = $exam->questions()->max('position') + 1;
+        $copy->save();
+
+        return redirect()
+            ->route('instructor.exams.questions.order.index', $exam)
+            ->with('status', 'Question duplicated. Review the copy before publishing.');
     }
 
     public function destroy(InstructorExam $exam, InstructorExamQuestion $question): RedirectResponse

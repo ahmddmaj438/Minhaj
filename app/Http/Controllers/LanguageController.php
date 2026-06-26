@@ -8,22 +8,59 @@ use Illuminate\Validation\Rule;
 
 class LanguageController extends Controller
 {
+    private const SUPPORTED_LOCALES = ['en', 'ar'];
+    private const LOCALE_COOKIE_MINUTES = 60 * 24 * 365;
+
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'locale' => ['required', 'string', Rule::in(['en', 'ar'])],
+            'locale' => ['required', 'string', Rule::in(self::SUPPORTED_LOCALES)],
             'redirect_to' => ['nullable', 'string', 'max:2048'],
         ]);
 
-        $request->session()->put('locale', $validated['locale']);
+        $this->storeLocale($request, $validated['locale']);
 
         $redirectTo = $validated['redirect_to'] ?? null;
 
         if ($this->isLocalRedirect($redirectTo)) {
-            return redirect()->to($redirectTo);
+            return $this->withLocaleCookie(redirect()->to($redirectTo), $validated['locale']);
         }
 
-        return redirect()->back();
+        return $this->withLocaleCookie(redirect()->back(), $validated['locale']);
+    }
+
+    public function switch(Request $request, string $locale): RedirectResponse
+    {
+        abort_unless(in_array($locale, self::SUPPORTED_LOCALES, true), 404);
+
+        $this->storeLocale($request, $locale);
+
+        $redirectTo = $request->query('redirect_to');
+        $response = $this->isLocalRedirect($redirectTo)
+            ? redirect()->to($redirectTo)
+            : redirect()->back();
+
+        return $this->withLocaleCookie($response, $locale);
+    }
+
+    private function storeLocale(Request $request, string $locale): void
+    {
+        $request->session()->put('locale', $locale);
+    }
+
+    private function withLocaleCookie(RedirectResponse $response, string $locale): RedirectResponse
+    {
+        return $response->withCookie(cookie(
+            'locale',
+            $locale,
+            self::LOCALE_COOKIE_MINUTES,
+            null,
+            null,
+            false,
+            false,
+            false,
+            'lax'
+        ));
     }
 
     private function isLocalRedirect(?string $url): bool

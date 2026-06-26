@@ -1097,7 +1097,7 @@ class StudentExamPortalTest extends TestCase
             ->assertJsonPath('suggestion.suggested_score', 16)
             ->assertJsonPath('suggestion.provider', 'pollinations_public:openai')
             ->assertJsonPath('suggestion.rubric_assessment.0.criterion', 'Core concept')
-            ->assertJsonPath('suggestion.provider_note', fn (string $note): bool => str_contains($note, 'Public endpoint retries used'));
+            ->assertJsonPath('suggestion.provider_note', fn (string $note): bool => str_contains($note, 'more than one attempt'));
 
         $this->assertCount(2, Http::recorded());
     }
@@ -1247,8 +1247,8 @@ class StudentExamPortalTest extends TestCase
             ->assertJsonPath('suggestion.provider', 'ai_provider_unavailable')
             ->assertJsonPath('suggestion.suggested_score', null)
             ->assertJsonPath('suggestion.confidence', 0)
-            ->assertJsonPath('suggestion.provider_note', 'No AI score was produced because no AI provider completed the request. Add a Groq/Gemini key or keep POLLINATIONS_ENABLED=true for the public fallback.')
-            ->assertJsonPath('suggestion.rationale', fn (?string $value): bool => str_contains((string) $value, 'No content-based grade was calculated locally'));
+            ->assertJsonPath('suggestion.provider_note', 'The AI service is currently unavailable. Please check the AI assistance settings and try again.')
+            ->assertJsonPath('suggestion.rationale', fn (?string $value): bool => str_contains((string) $value, 'No content-based score was calculated'));
 
         $suggestion = $answer->refresh()->answer_payload['ai_grading_suggestion'] ?? [];
 

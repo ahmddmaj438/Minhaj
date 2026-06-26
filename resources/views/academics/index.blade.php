@@ -1,13 +1,13 @@
 @php
-    $activeTab = old('_academic_tab', 'setup');
+    $activeTab = old('_academic_tab', session('academic_tab', 'setup'));
     $inputClass = 'mt-2 block min-h-11 w-full rounded-xl border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500';
     $selectClass = $inputClass;
     $labelClass = 'block text-sm font-semibold text-slate-800';
     $panelClass = 'rounded-xl border border-slate-200 bg-white p-6 shadow-sm';
 
     $tabs = [
-        ['id' => 'setup', 'label' => __('Setup'), 'description' => __('Majors and student profiles')],
-        ['id' => 'enrollment', 'label' => __('Enrollment'), 'description' => __('Courses, majors, and students')],
+        ['id' => 'setup', 'label' => __('Setup'), 'description' => __('Programs and student profiles')],
+        ['id' => 'enrollment', 'label' => __('Enrollment'), 'description' => __('Courses, programs, and students')],
         ['id' => 'assignments', 'label' => __('Exam assignments'), 'description' => __('Availability and attempts')],
         ['id' => 'review', 'label' => __('Review'), 'description' => __('Search records and sessions')],
     ];
@@ -15,13 +15,13 @@
     $nextAction = match (true) {
         $majors->isEmpty() => [
             'tab' => 'setup',
-            'label' => __('Create the first major'),
-            'detail' => __('Majors organize students and make course planning easier.'),
+            'label' => __('Create the first program'),
+            'detail' => __('Programs organize students and make course planning easier.'),
         ],
-        $studentUsers->isNotEmpty() && $students->isEmpty() => [
+        $students->isEmpty() => [
             'tab' => 'setup',
-            'label' => __('Create student profiles'),
-            'detail' => __('Connect existing Laravel users to student numbers and academic status.'),
+            'label' => __('Create student accounts'),
+            'detail' => __('Add students with login details and academic profile information.'),
         ],
         $courses->isEmpty() => [
             'tab' => 'enrollment',
@@ -36,7 +36,7 @@
         default => [
             'tab' => 'review',
             'label' => __('Review academic activity'),
-            'detail' => __('Use the tables to monitor students, assignments, and exam sessions.'),
+            'detail' => __('Use the lists to monitor students, assignments, and exam sessions.'),
         ],
     };
 
@@ -98,14 +98,14 @@
 
             <section class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <article class="dashboard-card-motion rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                    <p class="text-sm font-medium text-slate-500">{{ __('Majors') }}</p>
+                    <p class="text-sm font-medium text-slate-500">{{ __('Programs') }}</p>
                     <p class="mt-2 text-3xl font-semibold text-slate-950">{{ number_format($majors->count()) }}</p>
                     <p class="mt-2 text-sm text-slate-600">{{ __('Programs available for students and courses.') }}</p>
                 </article>
                 <article class="dashboard-card-motion rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                     <p class="text-sm font-medium text-slate-500">{{ __('Students') }}</p>
                     <p class="mt-2 text-3xl font-semibold text-slate-950">{{ number_format($students->count()) }}</p>
-                    <p class="mt-2 text-sm text-slate-600">{{ __('Laravel users with academic profiles.') }}</p>
+                    <p class="mt-2 text-sm text-slate-600">{{ __('Student accounts with academic profiles.') }}</p>
                 </article>
                 <article class="dashboard-card-motion rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
                     <p class="text-sm font-medium text-slate-500">{{ __('Courses') }}</p>
@@ -117,6 +117,20 @@
                     <p class="mt-2 text-3xl font-semibold text-slate-950">{{ number_format($assignments->count()) }}</p>
                     <p class="mt-2 text-sm text-slate-600">{{ __('Recent exam assignment rules.') }}</p>
                 </article>
+            </section>
+
+            <section class="rounded-xl border border-slate-200 bg-white/95 p-5 shadow-sm">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                        <p class="text-sm font-semibold text-slate-500">{{ __('Secondary setup option') }}</p>
+                        <h3 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Upload academic setup from Excel') }}</h3>
+                        <p class="mt-1 text-sm text-slate-600">{{ __('Use this when you already have programs, courses, students, and exam setup prepared in a spreadsheet. The forms below remain the normal way to manage academic data.') }}</p>
+                    </div>
+                    <a href="{{ route('academics.upload.index') }}"
+                        class="inline-flex min-h-11 items-center justify-center rounded-xl border border-orange-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-orange-50">
+                        {{ __('Open Excel upload') }}
+                    </a>
+                </div>
             </section>
 
             <section class="rounded-xl border border-orange-100 bg-white/95 p-5 shadow-sm">
@@ -164,7 +178,7 @@
                         <div class="mb-5">
                             <h3 class="text-xl font-semibold text-slate-950">{{ __('Start with the academic identity') }}</h3>
                             <p class="mt-1 text-sm text-slate-600">
-                                {{ __('Create the program structure first, then connect existing user accounts to student profiles.') }}
+                                {{ __('Create the program structure first, then add student accounts and academic profiles.') }}
                             </p>
                         </div>
 
@@ -172,8 +186,8 @@
                             <section class="{{ $panelClass }}">
                                 <div class="border-b border-slate-100 pb-4">
                                     <p class="text-sm font-semibold text-orange-700">{{ __('Program setup') }}</p>
-                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Create a major') }}</h4>
-                                    <p class="mt-1 text-sm text-slate-600">{{ __('Use short codes that staff can recognize in tables and forms.') }}</p>
+                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Create a program') }}</h4>
+                                    <p class="mt-1 text-sm text-slate-600">{{ __('Use short codes that staff can recognize in lists and forms.') }}</p>
                                 </div>
 
                                 <form method="POST" action="{{ route('academics.majors.store') }}" class="mt-5 grid gap-4">
@@ -206,13 +220,13 @@
                                             </div>
                                             <label class="flex min-h-11 items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700">
                                                 <input type="checkbox" name="is_active" value="1" @checked(old('is_active', true)) class="rounded border-slate-300 text-orange-600 focus:ring-orange-500">
-                                                {{ __('Active major') }}
+                                                {{ __('Active program') }}
                                             </label>
                                         </div>
                                     </div>
 
                                     <button class="inline-flex min-h-11 w-fit items-center rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700">
-                                        {{ __('Create major') }}
+                                        {{ __('Add program information') }}
                                     </button>
                                 </form>
                             </section>
@@ -220,36 +234,34 @@
                             <section class="{{ $panelClass }}">
                                 <div class="border-b border-slate-100 pb-4">
                                     <p class="text-sm font-semibold text-orange-700">{{ __('Student setup') }}</p>
-                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Make a user a student') }}</h4>
-                                    <p class="mt-1 text-sm text-slate-600">{{ __('Only users without a student profile appear in the account list.') }}</p>
+                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Create student account') }}</h4>
+                                    <p class="mt-1 text-sm text-slate-600">{{ __('Add the login account and academic profile together, then enroll the student in courses from the enrollment tab.') }}</p>
                                 </div>
-
-                                @if ($studentUsers->isEmpty())
-                                    <div class="empty-state mt-5">
-                                        <strong class="block">{{ __('No available user accounts') }}</strong>
-                                        <span class="mt-1 block text-sm">{{ __('Every current user already has a student profile, or no users are ready for conversion.') }}</span>
-                                    </div>
-                                @endif
 
                                 <form method="POST" action="{{ route('academics.students.store') }}" class="mt-5 grid gap-4">
                                     @csrf
                                     <input type="hidden" name="_academic_tab" value="setup">
 
-                                    <div class="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                                    <div class="grid gap-4 sm:grid-cols-2">
                                         <div>
-                                            <label for="student_user_id" class="{{ $labelClass }}">{{ __('User account') }}</label>
-                                            <select id="student_user_id" name="user_id" required class="{{ $selectClass }}">
-                                                <option value="">{{ __('Select a user without student profile') }}</option>
-                                                @foreach ($studentUsers as $user)
-                                                    <option value="{{ $user->id }}" @selected((string) old('user_id') === (string) $user->id)>{{ $user->name }} - {{ $user->email }}</option>
-                                                @endforeach
-                                            </select>
-                                            <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+                                            <label for="student_name" class="{{ $labelClass }}">{{ __('Student name') }}</label>
+                                            <input id="student_name" name="student_name" value="{{ old('student_name') }}" required class="{{ $inputClass }}">
+                                            <x-input-error :messages="$errors->get('student_name')" class="mt-2" />
+                                        </div>
+                                        <div>
+                                            <label for="student_email" class="{{ $labelClass }}">{{ __('Student email') }}</label>
+                                            <input id="student_email" type="email" name="student_email" value="{{ old('student_email') }}" required class="{{ $inputClass }}">
+                                            <x-input-error :messages="$errors->get('student_email')" class="mt-2" />
                                         </div>
                                         <div>
                                             <label for="student_number" class="{{ $labelClass }}">{{ __('Student number') }}</label>
                                             <input id="student_number" name="student_number" value="{{ old('student_number') }}" required class="{{ $inputClass }}">
                                             <x-input-error :messages="$errors->get('student_number')" class="mt-2" />
+                                        </div>
+                                        <div>
+                                            <label for="student_password" class="{{ $labelClass }}">{{ __('Temporary password') }}</label>
+                                            <input id="student_password" type="password" name="student_password" required class="{{ $inputClass }}" autocomplete="new-password">
+                                            <x-input-error :messages="$errors->get('student_password')" class="mt-2" />
                                         </div>
                                     </div>
 
@@ -260,9 +272,9 @@
 
                                         <div x-show="advanced" x-transition class="mt-4 grid gap-4 rounded-xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-3">
                                             <div>
-                                                <label for="student_major_id" class="{{ $labelClass }}">{{ __('Major') }}</label>
+                                                <label for="student_major_id" class="{{ $labelClass }}">{{ __('Program') }}</label>
                                                 <select id="student_major_id" name="major_id" class="{{ $selectClass }}">
-                                                    <option value="">{{ __('No major yet') }}</option>
+                                                    <option value="">{{ __('No program yet') }}</option>
                                                     @foreach ($majors as $major)
                                                         <option value="{{ $major->id }}" @selected((string) old('major_id') === (string) $major->id)>{{ $major->code }} - {{ $major->name }}</option>
                                                     @endforeach
@@ -287,8 +299,8 @@
                                         </div>
                                     </div>
 
-                                    <button @disabled($studentUsers->isEmpty()) class="inline-flex min-h-11 w-fit items-center rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60">
-                                        {{ __('Create student profile') }}
+                                    <button class="inline-flex min-h-11 w-fit items-center rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700">
+                                        {{ __('Add student account') }}
                                     </button>
                                 </form>
                             </section>
@@ -298,14 +310,14 @@
                     <div id="academic-panel-enrollment" role="tabpanel" x-show="tab === 'enrollment'" x-transition x-bind:aria-hidden="tab === 'enrollment' ? 'false' : 'true'">
                         <div class="mb-5">
                             <h3 class="text-xl font-semibold text-slate-950">{{ __('Connect courses to programs and students') }}</h3>
-                            <p class="mt-1 text-sm text-slate-600">{{ __('First map courses to majors, then enroll individual students in the courses they can access.') }}</p>
+                            <p class="mt-1 text-sm text-slate-600">{{ __('First map courses to programs, then enroll individual students in the courses they can access.') }}</p>
                         </div>
 
-                        <div class="grid gap-6 xl:grid-cols-2">
+                        <div class="grid gap-6 xl:grid-cols-3">
                             <section class="{{ $panelClass }}">
                                 <div class="border-b border-slate-100 pb-4">
                                     <p class="text-sm font-semibold text-orange-700">{{ __('Curriculum map') }}</p>
-                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Assign course to major') }}</h4>
+                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Connect course to program') }}</h4>
                                 </div>
 
                                 <form method="POST" action="{{ route('academics.major-courses.store') }}" class="mt-5 grid gap-4">
@@ -313,9 +325,9 @@
                                     <input type="hidden" name="_academic_tab" value="enrollment">
                                     <div class="grid gap-4 sm:grid-cols-2">
                                         <div>
-                                            <label for="course_major_major_id" class="{{ $labelClass }}">{{ __('Major') }}</label>
+                                            <label for="course_major_major_id" class="{{ $labelClass }}">{{ __('Program') }}</label>
                                             <select id="course_major_major_id" name="major_id" required class="{{ $selectClass }}">
-                                                <option value="">{{ __('Select major') }}</option>
+                                                <option value="">{{ __('Select program') }}</option>
                                                 @foreach ($majors as $major)
                                                     <option value="{{ $major->id }}" @selected((string) old('major_id') === (string) $major->id)>{{ $major->code }} - {{ $major->name }}</option>
                                                 @endforeach
@@ -415,6 +427,43 @@
 
                                     <button @disabled($students->isEmpty() || $courses->isEmpty()) class="inline-flex min-h-11 w-fit items-center rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60">
                                         {{ __('Enroll student') }}
+                                    </button>
+                                </form>
+                            </section>
+
+                            <section class="{{ $panelClass }}">
+                                <div class="border-b border-slate-100 pb-4">
+                                    <p class="text-sm font-semibold text-orange-700">{{ __('Assigned Courses') }}</p>
+                                    <h4 class="mt-1 text-lg font-semibold text-slate-950">{{ __('Assign teacher to course') }}</h4>
+                                    <p class="mt-1 text-sm text-slate-600">{{ __('Teachers can only access exams, grading, and reports for their assigned courses.') }}</p>
+                                </div>
+
+                                <form method="POST" action="{{ route('academics.course-teachers.store') }}" class="mt-5 grid gap-4">
+                                    @csrf
+                                    <input type="hidden" name="_academic_tab" value="enrollment">
+                                    <div>
+                                        <label for="teacher_course_id" class="{{ $labelClass }}">{{ __('Course') }}</label>
+                                        <select id="teacher_course_id" name="course_id" required class="{{ $selectClass }}">
+                                            <option value="">{{ __('Select course') }}</option>
+                                            @foreach ($courses as $course)
+                                                <option value="{{ $course->id }}" @selected((string) old('course_id') === (string) $course->id)>{{ $course->code }} - {{ $course->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error :messages="$errors->get('course_id')" class="mt-2" />
+                                    </div>
+                                    <div>
+                                        <label for="teacher_user_id" class="{{ $labelClass }}">{{ __('Teacher') }}</label>
+                                        <select id="teacher_user_id" name="user_id" required class="{{ $selectClass }}">
+                                            <option value="">{{ __('Select teacher') }}</option>
+                                            @foreach ($teachers as $teacher)
+                                                <option value="{{ $teacher->id }}" @selected((string) old('user_id') === (string) $teacher->id)>{{ $teacher->name }} - {{ $teacher->email }}</option>
+                                            @endforeach
+                                        </select>
+                                        <x-input-error :messages="$errors->get('user_id')" class="mt-2" />
+                                    </div>
+
+                                    <button @disabled($teachers->isEmpty() || $courses->isEmpty()) class="inline-flex min-h-11 w-fit items-center rounded-xl bg-orange-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-60">
+                                        {{ __('Assign teacher') }}
                                     </button>
                                 </form>
                             </section>
@@ -539,7 +588,7 @@
                                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
                                             <h4 class="text-lg font-semibold text-slate-950">{{ __('Students') }}</h4>
-                                            <p class="mt-1 text-sm text-slate-600">{{ __('Profiles, majors, course counts, and status.') }}</p>
+                                            <p class="mt-1 text-sm text-slate-600">{{ __('Profiles, programs, course counts, and status.') }}</p>
                                         </div>
                                         <input data-table-filter="#academic-students-table" type="search" placeholder="{{ __('Search students') }}" class="min-h-11 rounded-xl border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:w-72">
                                     </div>
@@ -549,7 +598,7 @@
                                         <thead class="bg-slate-100 text-xs uppercase text-slate-600">
                                             <tr>
                                                 <th class="px-4 py-3">{{ __('Student') }}</th>
-                                                <th class="px-4 py-3">{{ __('Major') }}</th>
+                                                <th class="px-4 py-3">{{ __('Program') }}</th>
                                                 <th class="px-4 py-3">{{ __('Courses') }}</th>
                                                 <th class="px-4 py-3">{{ __('Status') }}</th>
                                             </tr>
@@ -569,7 +618,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="4" class="px-4 py-8">
+                                                    <td colspan="5" class="px-4 py-8">
                                                         <div class="empty-state text-center">
                                                             <strong class="block">{{ __('No students yet.') }}</strong>
                                                             <span class="mt-1 block text-sm">{{ __('Create student profiles from the setup tab.') }}</span>
@@ -578,7 +627,7 @@
                                                 </tr>
                                             @endforelse
                                             <tr data-filter-empty hidden>
-                                                <td colspan="4" class="px-4 py-8">
+                                                <td colspan="5" class="px-4 py-8">
                                                     <div class="empty-state text-center">{{ __('No students match your search.') }}</div>
                                                 </td>
                                             </tr>
@@ -591,7 +640,7 @@
                                 <summary class="cursor-pointer list-none border-b border-slate-100 p-5">
                                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <h4 class="text-lg font-semibold text-slate-950">{{ __('Courses and majors') }}</h4>
+                                            <h4 class="text-lg font-semibold text-slate-950">{{ __('Courses and programs') }}</h4>
                                             <p class="mt-1 text-sm text-slate-600">{{ __('Course catalog, linked programs, and enrollments.') }}</p>
                                         </div>
                                         <input data-table-filter="#academic-courses-table" type="search" placeholder="{{ __('Search courses') }}" class="min-h-11 rounded-xl border-slate-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 sm:w-72">
@@ -602,7 +651,8 @@
                                         <thead class="bg-slate-100 text-xs uppercase text-slate-600">
                                             <tr>
                                                 <th class="px-4 py-3">{{ __('Course') }}</th>
-                                                <th class="px-4 py-3">{{ __('Majors') }}</th>
+                                                <th class="px-4 py-3">{{ __('Teachers') }}</th>
+                                                <th class="px-4 py-3">{{ __('Programs') }}</th>
                                                 <th class="px-4 py-3">{{ __('Students') }}</th>
                                                 <th class="px-4 py-3">{{ __('Status') }}</th>
                                             </tr>
@@ -614,6 +664,7 @@
                                                         <p class="font-semibold text-slate-950">{{ $course->code }}</p>
                                                         <p class="text-xs text-slate-500">{{ $course->name }}</p>
                                                     </td>
+                                                    <td class="px-4 py-3">{{ $course->teachers->pluck('name')->join(', ') ?: __('Not assigned') }}</td>
                                                     <td class="px-4 py-3">{{ $course->majors->pluck('code')->join(', ') ?: __('Not assigned') }}</td>
                                                     <td class="px-4 py-3">{{ $course->students->count() }}</td>
                                                     <td class="px-4 py-3">{{ $course->is_active ? __('Active') : __('Inactive') }}</td>

@@ -59,6 +59,13 @@ class WrittenAnswerEvaluationPayload
             'rubric_and_expected_answer' => [
                 'rubric' => $settings['rubric'] ?? null,
                 'expected_answer' => $settings['expected_answer'] ?? null,
+                'teacher_approved_review_guidance' => [
+                    'status' => $settings['review_guidance_status'] ?? null,
+                    'key_points' => $settings['key_points'] ?? null,
+                    'mark_distribution' => $settings['mark_distribution'] ?? null,
+                    'common_mistakes' => $settings['common_mistakes'] ?? null,
+                    'evaluation_instructions' => $settings['evaluation_instructions'] ?? null,
+                ],
                 'criteria' => $settings['criteria'] ?? null,
                 'starter_code' => $settings['starter_code'] ?? null,
                 'expected_tasks' => $settings['expected_tasks'] ?? null,

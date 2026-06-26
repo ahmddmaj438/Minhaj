@@ -6,6 +6,7 @@ use App\Models\Group;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\FriendlyName;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +31,7 @@ class AdminAccessController extends Controller
             'selectedGroup' => $selectedGroup,
             'availableScreens' => $this->availableScreens(),
             'availableButtons' => $this->availableButtons(),
-            'availableTables' => Schema::getTableListing(),
+            'availableDataSections' => $this->availableDataSections(),
             'assignedPermissionNames' => $assignedPermissionNames,
         ]);
     }
@@ -42,6 +43,10 @@ class AdminAccessController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:groups,slug'],
+        ], [
+            'name.required' => 'Please enter a role name.',
+            'slug.required' => 'Please enter a short role code.',
+            'slug.unique' => 'This role is already registered.',
         ]);
 
         Group::create($data);
@@ -54,19 +59,51 @@ class AdminAccessController extends Controller
         $group?->roles()->syncWithoutDetaching([$role->id]);
 
         return redirect()->route('admin.access.index', ['group' => $group?->id])
-            ->with('status', 'Group created. Next: configure screens, buttons, DB access, and users.');
+            ->with('status', 'User role created. Next: choose pages, allowed actions, data access, and members.');
     }
 
     public function updateUserGroups(Request $request, User $user): RedirectResponse
     {
+        abort_unless($request->user()?->can('db.group_user.update'), 403);
+
         $data = $request->validate([
             'group_ids' => ['array'],
             'group_ids.*' => ['integer', 'exists:groups,id'],
+        ], [
+            'group_ids.*.exists' => 'The selected role was not found.',
         ]);
 
         $user->groups()->sync($data['group_ids'] ?? []);
 
-        return back()->with('status', 'User groups updated.');
+        return back()->with('status', 'User role assignment was saved.');
+    }
+
+    public function destroyGroup(Request $request, Group $group): RedirectResponse
+    {
+        abort_unless($request->user()?->can('db.groups.delete'), 403);
+
+        if ($group->users()->exists()) {
+            return back()->withErrors([
+                'role' => 'This role is already assigned. Remove members before removing the role.',
+            ]);
+        }
+
+        $roles = $group->roles()->withCount(['groups', 'users'])->get();
+
+        $group->users()->detach();
+        $group->rules()->detach();
+        $group->roles()->detach();
+        $group->delete();
+
+        foreach ($roles as $role) {
+            if ($role->groups_count <= 1 && $role->users_count === 0) {
+                $role->permissions()->detach();
+                $role->delete();
+            }
+        }
+
+        return redirect()->route('admin.access.index')
+            ->with('status', 'User role was removed from the system.');
     }
 
     public function updateGroupScreens(Request $request, Group $group): RedirectResponse
@@ -76,6 +113,8 @@ class AdminAccessController extends Controller
         $data = $request->validate([
             'screens' => ['array'],
             'screens.*' => ['string', Rule::in($this->availableScreenNames())],
+        ], [
+            'screens.*.in' => 'The selected page was not found.',
         ]);
 
         $role = $group->roles()->firstOrCreate(
@@ -85,7 +124,7 @@ class AdminAccessController extends Controller
         $selected = collect($data['screens'] ?? [])->map(fn (string $screen) => 'screen.' . $screen . '.view');
         $this->syncPermissionPrefix($role, 'screen.', $selected->all());
 
-        return back()->with('status', 'Group screen access updated.');
+        return back()->with('status', 'Page access was saved.');
     }
 
     public function updateGroupButtons(Request $request, Group $group): RedirectResponse
@@ -95,6 +134,8 @@ class AdminAccessController extends Controller
         $data = $request->validate([
             'buttons' => ['array'],
             'buttons.*' => ['string', Rule::in($this->availableButtonKeys())],
+        ], [
+            'buttons.*.in' => 'The selected action was not found.',
         ]);
 
         $role = $group->roles()->firstOrCreate(
@@ -104,7 +145,7 @@ class AdminAccessController extends Controller
         $selected = collect($data['buttons'] ?? [])->map(fn (string $button) => 'button.' . $button);
         $this->syncPermissionPrefix($role, 'button.', $selected->all());
 
-        return back()->with('status', 'Group button access updated.');
+        return back()->with('status', 'Action access was saved.');
     }
 
     public function updateGroupDbAccess(Request $request, Group $group): RedirectResponse
@@ -114,6 +155,8 @@ class AdminAccessController extends Controller
         $data = $request->validate([
             'db_permissions' => ['array'],
             'db_permissions.*' => ['string', Rule::in($this->availableDbPermissionKeys())],
+        ], [
+            'db_permissions.*.in' => 'The selected information permission was not found.',
         ]);
 
         $role = $group->roles()->firstOrCreate(
@@ -123,7 +166,7 @@ class AdminAccessController extends Controller
         $selected = collect($data['db_permissions'] ?? [])->map(fn (string $entry) => 'db.' . $entry);
         $this->syncPermissionPrefix($role, 'db.', $selected->all());
 
-        return back()->with('status', 'Group DB access updated.');
+        return back()->with('status', 'Data access was saved.');
     }
 
     public function updateGroupUsers(Request $request, Group $group): RedirectResponse
@@ -133,11 +176,13 @@ class AdminAccessController extends Controller
         $data = $request->validate([
             'user_ids' => ['array'],
             'user_ids.*' => ['integer', 'exists:users,id'],
+        ], [
+            'user_ids.*.exists' => 'The selected user was not found.',
         ]);
 
         $group->users()->sync($data['user_ids'] ?? []);
 
-        return back()->with('status', 'Group users updated.');
+        return back()->with('status', 'Role members were saved.');
     }
 
     private function syncPermissionPrefix(Role $role, string $prefix, array $selectedNames): void
@@ -174,8 +219,9 @@ class AdminAccessController extends Controller
             return [
                 'name' => $route->getName(),
                 'uri' => '/' . ltrim($route->uri(), '/'),
+                ...FriendlyName::screen($route->getName()),
             ];
-        })->values()->all();
+        })->sortBy('label')->values()->all();
     }
 
     private function availableButtons(): array
@@ -188,6 +234,7 @@ class AdminAccessController extends Controller
             'data.table.create' => ['create_record'],
             'data.table.edit' => ['update_record'],
             'data.table.index' => ['delete_record'],
+            'instructor.exams.questions.order.index' => ['save', 'duplicate', 'delete'],
         ];
 
         $routes = collect(Route::getRoutes());
@@ -206,7 +253,24 @@ class AdminAccessController extends Controller
             }
         }
 
-        return $base;
+        return collect($base)
+            ->map(function (array $buttons, string $page): array {
+                return [
+                    'page' => $page,
+                    ...FriendlyName::screen($page),
+                    'buttons' => collect($buttons)
+                        ->map(fn (string $button): array => [
+                            'key' => $button,
+                            'value' => $page.'.'.$button,
+                            'label' => FriendlyName::button($page.'.'.$button),
+                        ])
+                        ->values()
+                        ->all(),
+                ];
+            })
+            ->sortBy('label')
+            ->values()
+            ->all();
     }
 
     private function availableScreenNames(): array
@@ -217,9 +281,31 @@ class AdminAccessController extends Controller
     private function availableButtonKeys(): array
     {
         return collect($this->availableButtons())
-            ->flatMap(fn (array $buttons, string $page) => collect($buttons)
-                ->map(fn (string $button): string => $page.'.'.$button))
+            ->flatMap(fn (array $page) => collect($page['buttons'])
+                ->map(fn (array $button): string => $button['value']))
             ->values()
+            ->all();
+    }
+
+    private function availableDataSections(): array
+    {
+        $actions = ['select', 'insert', 'update', 'delete'];
+
+        return collect(Schema::getTableListing())
+            ->map(fn (string $table): array => [
+                'table' => $table,
+                ...FriendlyName::dataSection($table),
+                'actions' => collect($actions)
+                    ->map(fn (string $action): array => [
+                        'key' => $table.'.'.$action,
+                        'name' => 'db.'.$table.'.'.$action,
+                        'label' => FriendlyName::dataAction($action),
+                    ])
+                    ->all(),
+            ])
+            ->groupBy('group')
+            ->sortKeys()
+            ->map(fn ($items) => $items->sortBy('label')->values()->all())
             ->all();
     }
 
